@@ -105,7 +105,7 @@ void EnumerateAll7CardHands()
 		return;
 	}
 
-	printf("\nEnumerated %d hands in %fgetElapsedTimeInMilliSec microseconds!\n", count, hftimer.getElapsedTimeInMicroSec());
+	printf("\nEnumerated %d hands in %f microseconds!\n", count, hftimer.getElapsedTimeInMicroSec());
 }
 
 int _tmain(int argc, _TCHAR* argv[])
