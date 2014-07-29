@@ -11,6 +11,7 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
+  ios_base::sync_with_stdio(false);
 
   bool success = Evaluator::initialize("../linux/HandRanks.dat");
   if (!success) {

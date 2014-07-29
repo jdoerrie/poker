@@ -12,7 +12,7 @@ vector<pair<string, double>>  OmahaEvaluator::evalHands(
 
   vector<vector<int>> handsIds;
   for (auto player: players) {
-    handsIds.emplace_back(parseCards(player));
+    handsIds.push_back(parseCards(player));
   }
 
   vector<int> boardIds = parseCards(board);
@@ -162,7 +162,7 @@ vector<pair<string, double>>  OmahaEvaluator::evalHands(
   vector<pair<string, double>> equities;
   equities.reserve(numPlayers);
   for (size_t i = 0; i < numPlayers; ++i) {
-    equities.push_back({players[i], wonGames[i] / numGames});
+    equities.emplace_back(players[i], wonGames[i] / numGames);
   }
 
   return equities;

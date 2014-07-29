@@ -58,7 +58,7 @@ vector<int> Evaluator::parseCards(const string& hand) {
     int suit = suitMap.at(hand[i + 1]);
 
     int cardId = rank * 4 + suit + 1;
-    result.push_back(cardId);
+    result.emplace_back(cardId);
   }
 
   return result;
@@ -86,12 +86,13 @@ void Evaluator::printEquities(const vector<pair<string, double>>& equities) {
   }
 }
 
-vector<pair<string, double>> Evaluator::bestCardForHero(const vector<string>& heroRange,
+vector<pair<string, double>> Evaluator::bestCardForHero(
+  const vector<string>& heroRange,
   const vector<string>& villainRange, const string& board,
   const string& dead, const string& game) {
   vector<pair<string, double>> result;
 
-  bool isHoldem = game == "holdem";
+  bool isHoldem = (game == "holdem");
 
   vector<double> equities(53);
   vector<int> counts(53);
@@ -128,7 +129,7 @@ vector<pair<string, double>> Evaluator::bestCardForHero(const vector<string>& he
             board + toString({id}), dead);
         }
 
-        equities[id] += result[0].second;
+        equities[id] += std::move(result[0].second);
         ++counts[id];
       }
 
@@ -149,7 +150,7 @@ vector<pair<string, double>> Evaluator::bestCardForHero(const vector<string>& he
       continue;
     }
 
-    result.push_back({toString({id}), equities[id] / counts[id]});
+    result.emplace_back(toString({id}), equities[id] / counts[id]);
   }
 
   sort(result.begin(), result.end(),
