@@ -12,4 +12,4 @@ dbg:
 	$(CC) $(DBGFLAGS) *.cpp -o Evaluator
 
 clean:
-	find -name Evaluator -delete
+	rm Evaluator 
