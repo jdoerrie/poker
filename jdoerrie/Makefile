@@ -1,15 +1,16 @@
 CC=g++
-OPTFLAGS=-O3 -std=c++11
-DBGFLAGS=-O0 -g -std=c++11
+CXXFLAGS=-std=c++11 -lboost_regex
+OPTFLAGS=-O3
+DBGFLAGS=-O0 -g
 
 all:
-	$(CC) $(OPTFLAGS) *.cpp -o Evaluator
+	$(CC) $(CXXFLAGS) $(OPTFLAGS) *.cpp -o Evaluator
 
 opt:
-	$(CC) $(OPTFLAGS) *.cpp -o Evaluator
+	$(CC) $(CXXFLAGS) $(OPTFLAGS) *.cpp -o Evaluator
 
 dbg:
-	$(CC) $(DBGFLAGS) *.cpp -o Evaluator
+	$(CC) $(CXXFLAGS) $(DBGFLAGS) *.cpp -o Evaluator
 
 clean:
-	rm Evaluator 
+	rm Evaluator

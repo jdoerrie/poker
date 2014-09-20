@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GameType.h"
 #include <array>
 #include <string>
 #include <unordered_map>
@@ -22,19 +23,11 @@
  * Ac = 49  Ad = 50  Ah = 51  As = 52
  */
 
+class Hand;
+class Equity;
+class Range;
+
 class Evaluator {
- protected:
-  static const std::string ranks;
-  static const std::string suits;
-
-  static const std::unordered_map<char, int> rankMap;
-  static const std::unordered_map<char, int> suitMap;
-
-  static void evalHandsHelper(const std::vector<std::vector<int>> handsIds,
-                              int currRank, std::vector<int>& isUsed,
-                              std::vector<double>& wonGames, int64_t& numGames,
-                              int streetsLeft, int prevId);
-
  public:
   static std::array<int, 32487834> handRanks;
 
@@ -51,18 +44,40 @@ class Evaluator {
    * @param  hand Hand vector
    * @return      Hank Rank
    */
-  static int lookUpHandRank(const std::vector<int>& hand);
+  static int getHandRank(const Hand& hand);
 
-  static std::vector<int> parseCards(const std::string& hand);
-  static std::string toString(const std::vector<int>& hand);
+  static std::vector<Equity> evalRanges(
+      GameType gameType,
+      const std::vector<Range>& ranges,
+      const Hand& board,
+      const Hand& dead
+  );
 
-  static void printEquities(
-    const std::vector<std::pair<std::string, double>>& equities);
+  static std::vector<Equity> evalHands(
+      GameType gameType,
+      const std::vector<Hand>& hands,
+      const Hand& board,
+      const Hand& dead
+  );
 
-  static std::vector<std::pair<std::string, double>> bestCardForHero(
-    const std::vector<std::string>& heroRange,
-    const std::vector<std::string>& villainRange,
-    const std::string& board,
-    const std::string& dead,
-    const std::string& game);
+ private:
+  static std::vector<Equity> evalRangesHelper(
+      GameType gameType,
+      const std::vector<Range>& ranges,
+      const Hand& boardCards,
+      const Hand& deadCards,
+      std::vector<Hand> currHands = {}
+  );
+
+  static std::vector<Equity> evalHoldemHands(
+      const std::vector<Hand>& hands,
+      const Hand& board,
+      const Hand& dead
+  );
+
+  static std::vector<Equity> evalOmahaHands(
+      const std::vector<Hand>& hands,
+      const Hand& board,
+      const Hand& dead
+  );
 };

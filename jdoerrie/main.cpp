@@ -1,37 +1,31 @@
-#include "Evaluator.h"
-#include "OmahaEvaluator.h"
-#include "HoldemEvaluator.h"
+#include "Card.h"
+#include "Hand.h"
+#include "PokerGame.h"
 #include "Utils.h"
 
-#include <cstdio>
+#include <boost/algorithm/string.hpp>
 #include <getopt.h>
 #include <iostream>
-#include <set>
 
 using namespace std;
 
 int main(int argc, char *argv[]) {
   ios_base::sync_with_stdio(false);
 
-  bool success = Evaluator::initialize("../linux/HandRanks.dat");
-  if (!success) {
-    cerr << "Failed to initialize Evaluator, exiting." << endl;
-    return 1;
-  }
-
-  string mode, game, hands, board, dead;
+  string mode, game, handsStr;
+  Hand board, dead;
 
   static struct option long_options[] = {
-    { "mode",  required_argument, NULL,  'm' },
-    { "game",  required_argument, NULL,  'g' },
-    { "hands", required_argument, NULL,  'h' },
-    { "board", optional_argument, NULL,  'b' },
-    { "dead",  optional_argument, NULL,  'd' },
-    { NULL,                    0, NULL,   0  }
+    { "mode",  required_argument, nullptr, 'm' },
+    { "game",  required_argument, nullptr, 'g' },
+    { "hands", required_argument, nullptr, 'h' },
+    { "board", optional_argument, nullptr, 'b' },
+    { "dead",  optional_argument, nullptr, 'd' },
+    { nullptr,                 0, nullptr,  0  }
   };
 
   int ch = 0;
-  while ((ch = getopt_long(argc, argv, "m:g:h:bd", long_options, NULL)) != -1) {
+  while ((ch = getopt_long(argc, argv, "m:g:h:b:d:", long_options, nullptr)) != -1) {
     switch (ch) {
       case 'm':
         mode = optarg;
@@ -42,43 +36,56 @@ int main(int argc, char *argv[]) {
         break;
 
       case 'h':
-        hands = optarg;
+        handsStr = optarg;
         break;
 
       case 'b':
-        board = optarg;
+        board = Hand(optarg);
         break;
 
       case 'd':
-        dead = optarg;
+        dead = Hand(optarg);
         break;
     }
   }
 
-  if (!mode.size() || !game.size() || !hands.size()) {
-    cout << argv[0] << " --mode=(eval|card|hand) --game=(holdem|omaha) --hands"
-      " [--board, --dead]\n";
+  if (mode.empty() || game.empty() || handsStr.empty()) {
+    cout << argv[0] << " --mode=[eval, card, hand] --game=[holdem, omaha] "
+      "--hands [--board, --dead]\n";
     return 1;
   }
 
-  vector<string> players = Utils::tokenize(hands, ',');
-  vector<pair<string, double>> equities;
+  vector<string> players;
+  boost::split(players, handsStr, boost::is_any_of(";"));
+  vector<Hand> hands;
+  for (const auto& player: players) {
+    hands.emplace_back(player);
+  }
 
-  if (mode == "eval") {
-    if (game == "holdem") {
-      equities = HoldemEvaluator::evalHands(players, board, dead);
-    } else if (game == "omaha") {
-      equities = OmahaEvaluator::evalHands(players, board, dead);
-    }
-  } else {
-    equities = Evaluator::bestCardForHero({players[0]}, {players[1]},
-      board, dead, game);
+  GameType gameType = Utils::getGameType(game);
+  if (gameType == GameType::INVALID) {
+    cerr << "ERROR: " << game << " is not a valid game" << endl;
+    return 1;
+  }
+
+  vector<Range> ranges(players.size());
+  for (int i = 0; i < players.size(); ++i) {
+    cout << "Player " << i + 1 << ": " << players[i];
+    cout << "\t(" << ranges[i].fromRegEx(players[i], gameType) << " combos)" << endl;
   }
 
   cout << "Board: " << board << endl;
   cout << "Dead: " << dead << endl;
-  Evaluator::printEquities(equities);
+  cout << endl;
 
+  PokerGame pokerGame(gameType, ranges, board, dead);
+  if (mode == "eval") {
+    pokerGame.printEquities();
+  } else if (mode == "card") {
+    pokerGame.printNextCards();
+  } else if (mode == "hand") {
+    pokerGame.printRangeBreakdown();
+  }
 
   return 0;
 }

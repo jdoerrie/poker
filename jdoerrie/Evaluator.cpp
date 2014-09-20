@@ -1,30 +1,23 @@
 #include "Evaluator.h"
-#include "HoldemEvaluator.h"
-#include "OmahaEvaluator.h"
+
+#include "Card.h"
+#include "Equity.h"
+#include "Hand.h"
+#include "Range.h"
 
 #include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include <vector>
+#include <fstream>
 
 using namespace std;
 
 array<int, 32487834> Evaluator::handRanks;
 
-const string Evaluator::ranks = "23456789TJQKA";
-const string Evaluator::suits = "cdhs";
-
-const unordered_map<char, int> Evaluator::rankMap = {
-  {'2', 0}, {'3', 1}, {'4', 2}, {'5',  3}, {'6',  4}, {'7',  5}, {'8', 6},
-  {'9', 7}, {'T', 8}, {'J', 9}, {'Q', 10}, {'K', 11}, {'A', 12}
-};
-
-const unordered_map<char, int> Evaluator::suitMap = {
-  {'c', 0}, {'d', 1}, {'h', 2}, {'s', 3}
-};
-
 bool Evaluator::initialize(const string& fileName) {
   FILE *fin = fopen(fileName.c_str(), "rb");
-  if (fin == NULL) {
+  if (fin == nullptr) {
     return false;
   }
 
@@ -33,134 +26,376 @@ bool Evaluator::initialize(const string& fileName) {
   return true;
 }
 
-int Evaluator::lookUpHandRank(const vector<int>& hand) {
-  if (hand.size() < 5 || hand.size() > 7) {
+int Evaluator::getHandRank(const Hand& hand) {
+  if (hand.getCards().size() < 5 || hand.getCards().size() > 7) {
     return 0;
   }
 
-  int rank = 53;
-  for (auto card: hand) {
-    rank = handRanks[rank + card];
+  int rank = Card::MAX_ID + 1;
+  for (auto card: hand.getCards()) {
+    rank = handRanks[rank + card.getId()];
   }
 
-  if (hand.size() != 7) {
+  if (hand.getCards().size() != 7) {
     rank = handRanks[rank];
   }
 
   return rank;
 }
 
-vector<int> Evaluator::parseCards(const string& hand) {
-  vector<int> result;
-  result.reserve(hand.size() / 2);
-  for (int i = 0; i + 1 < hand.size(); i += 2) {
-    int rank = rankMap.at(hand[i]);
-    int suit = suitMap.at(hand[i + 1]);
-
-    int cardId = rank * 4 + suit + 1;
-    result.emplace_back(cardId);
-  }
-
-  return result;
+vector<Equity> Evaluator::evalRanges(
+    GameType gameType,
+    const vector<Range>& ranges,
+    const Hand& board,
+    const Hand& dead
+) {
+  return evalRangesHelper(gameType, ranges, board, dead);
 }
 
+vector<Equity> Evaluator::evalHands(
+    GameType gameType,
+    const vector<Hand>& hands,
+    const Hand& board,
+    const Hand& dead
+) {
+  switch (gameType) {
+    case GameType::HOLDEM:
+      return Evaluator::evalHoldemHands(hands, board, dead);
 
-string Evaluator::toString(const vector<int>& cards) {
-  size_t numCards = cards.size();
-  string result(numCards * 2, ' ');
+    case GameType::OMAHA:
+    case GameType::OMAHA5:
+      return Evaluator::evalOmahaHands(hands, board, dead);
 
-  for (size_t i = 0; i < numCards; ++i) {
-    char rank = ranks[(cards[i] - 1) / 4];
-    char suit = suits[(cards[i] - 1) % 4];
-
-    result[2 * i] = rank;
-    result[2*i+1] = suit;
-  }
-
-  return result;
-}
-
-void Evaluator::printEquities(const vector<pair<string, double>>& equities) {
-  for (size_t i = 0; i < equities.size(); ++i) {
-    cout << equities[i].first << ": " << equities[i].second << endl;
+    default:
+      return {};
   }
 }
 
-vector<pair<string, double>> Evaluator::bestCardForHero(
-  const vector<string>& heroRange,
-  const vector<string>& villainRange, const string& board,
-  const string& dead, const string& game) {
-  vector<pair<string, double>> result;
-
-  bool isHoldem = (game == "holdem");
-
-  vector<double> equities(53);
-  vector<int> counts(53);
-
-  vector<int> used(53);
-  for (auto id: parseCards(board)) {
-    used[id] = true;
+vector<Equity> Evaluator::evalRangesHelper(
+    GameType gameType,
+    const vector<Range>& ranges,
+    const Hand& board,
+    const Hand& dead,
+    vector<Hand> currHands
+) {
+  if (currHands.size() == ranges.size()) {
+    return evalHands(gameType, currHands, board, dead);
   }
 
-  for (auto id: parseCards(dead)) {
-    used[id] = true;
-  }
+  vector<Equity> equities(ranges.size());
+  for (const auto& Hand: ranges[currHands.size()].getHands()) {
+    currHands.push_back(Hand);
+    auto result = evalRangesHelper(gameType, ranges, board, dead, currHands);
+    currHands.pop_back();
 
-  for (const auto& hero: heroRange) {
-    for (auto id: parseCards(hero)) {
-      used[id] = true;
-    }
-
-    for (const auto& villain: villainRange) {
-      for (auto id: parseCards(villain)) {
-        used[id] = true;
-      }
-
-      for (int id = 1; id < 53; ++id) {
-        if (used[id]) {
-          continue;
-        }
-
-        if (isHoldem) {
-          result = HoldemEvaluator::evalHands({hero, villain},
-            board + toString({id}), dead);
-        } else {
-          result = OmahaEvaluator::evalHands({hero, villain},
-            board + toString({id}), dead);
-        }
-
-        equities[id] += std::move(result[0].second);
-        ++counts[id];
-      }
-
-      for (auto id: parseCards(villain)) {
-        used[id] = false;
-      }
-    }
-
-    for (auto id: parseCards(hero)) {
-      used[id] = false;
+    for (int i = 0; i < ranges.size(); ++i) {
+      equities[i].merge(result[i]);
     }
   }
 
-  result.clear();
+  return equities;
+}
 
-  for (int id = 1; id < 53; ++id) {
-    if (!counts[id]) {
+
+vector<Equity> Evaluator::evalHoldemHands(
+    const vector<Hand>& hands,
+    const Hand& board,
+    const Hand& dead
+) {
+  size_t numPlayers = hands.size();
+  vector<Equity> equities(numPlayers);
+
+  vector<bool> isUsed(Card::MAX_ID + 1);
+  bool isValidGame = board.isValid() && dead.isValid();
+
+  for (auto hand: hands) {
+    isValidGame &= hand.isValid(2);
+    for (auto card: hand.getCards()) {
+      isValidGame &= !isUsed[card.getId()];
+      isUsed[card.getId()] = true;
+    }
+  }
+
+  for (auto card: board.getCards()) {
+    isValidGame &= !isUsed[card.getId()];
+    isUsed[card.getId()] = true;
+  }
+
+  for (auto card: dead.getCards()) {
+    isValidGame &= !isUsed[card.getId()];
+    isUsed[card.getId()] = true;
+  }
+
+  if (!isValidGame) {
+    return equities;
+  }
+
+  vector<int> ranks(numPlayers);
+
+  vector<int> starts(5, 1);
+  vector<int> ends(5, Card::MAX_ID);
+
+  for (size_t i = 0; i < board.getCards().size(); ++i) {
+    starts[i] = ends[i] = board.getCards()[i].getId();
+  }
+
+  for (int h0 = starts[0]; h0 <= ends[0]; ++h0) {
+    if (board.getCards().empty() && isUsed[h0]) {
       continue;
     }
 
-    result.emplace_back(toString({id}), equities[id] / counts[id]);
-  }
+    if (board.getCards().empty()) {
+      isUsed[h0] = true;
+      starts[1] = h0 + 1;
+    }
 
-  sort(result.begin(), result.end(),
-    [&](const pair<string, double>& cardA, const pair<string, double>& cardB) {
-      if (cardA.second != cardB.second) {
-        return cardA.second > cardB.second;
+    int r0 = handRanks[h0 + Card::MAX_ID + 1];
+
+    for (int h1 = starts[1]; h1 <= ends[1]; ++h1) {
+      if (board.getCards().size() <= 1 && isUsed[h1]) {
+        continue;
       }
 
-      return parseCards(cardA.first)[0] > parseCards(cardB.first)[0];
-    });
+      if (board.getCards().size() <= 1) {
+        isUsed[h1] = true;
+        starts[2] = h1 + 1;
+      }
 
-  return result;
+      int r1 = handRanks[h1 + r0];
+      for (int h2 = starts[2]; h2 <= ends[2]; ++h2) {
+        if (board.getCards().size() <= 2 && isUsed[h2]) {
+          continue;
+        }
+
+        if (board.getCards().size() <= 2) {
+          isUsed[h2] = true;
+          starts[3] = h2 + 1;
+        }
+
+        int r2 = handRanks[h2 + r1];
+        for (int h3 = starts[3]; h3 <= ends[3]; ++h3) {
+          if (board.getCards().size() <= 3 && isUsed[h3]) {
+            continue;
+          }
+
+          if (board.getCards().size() <= 3) {
+            isUsed[h3] = true;
+            starts[4] = h3 + 1;
+          }
+
+          int r3 = handRanks[h3 + r2];
+          for (int h4 = starts[4]; h4 <= ends[4]; ++h4) {
+            if (board.getCards().size() <= 4 && isUsed[h4]) {
+              continue;
+            }
+
+            int r4 = handRanks[h4 + r3];
+            int maxRank = -1;
+            int numBestPlayers = 0;
+
+            for (auto i = 0; i < numPlayers; ++i) {
+              ranks[i] = r4;
+              for (auto card: hands[i].getCards()) {
+                ranks[i] = handRanks[ranks[i] + card.getId()];
+              }
+
+              if (maxRank == ranks[i]) {
+                ++numBestPlayers;
+              } else if (maxRank < ranks[i]) {
+                maxRank = ranks[i];
+                numBestPlayers = 1;
+              }
+            }
+
+            for (auto i = 0; i < numPlayers; ++i) {
+              if (ranks[i] == maxRank) {
+                equities[i].addTie(numBestPlayers);
+              } else {
+                equities[i].addLose();
+              }
+            }
+          }
+
+          if (board.getCards().size() <= 3) {
+            isUsed[h3] = false;
+          }
+        }
+
+        if (board.getCards().size() <= 2) {
+          isUsed[h2] = false;
+        }
+      }
+
+      if (board.getCards().size() <= 1) {
+        isUsed[h1] = false;
+      }
+    }
+
+    if (board.getCards().empty()) {
+      isUsed[h0] = false;
+    }
+  }
+
+  return equities;
+}
+
+vector<Equity> Evaluator::evalOmahaHands(
+    const vector<Hand>& hands,
+    const Hand& board,
+    const Hand& dead
+) {
+  size_t numPlayers = hands.size();
+  vector<Equity> equities(numPlayers);
+
+  vector<bool> isUsed(Card::MAX_ID + 1);
+  bool isValidGame = board.isValid() && dead.isValid();
+
+  for (auto hand: hands) {
+    isValidGame &= hand.isValid(2);
+    for (auto card: hand.getCards()) {
+      isValidGame &= !isUsed[card.getId()];
+      isUsed[card.getId()] = true;
+    }
+  }
+
+  for (auto card: board.getCards()) {
+    isValidGame &= !isUsed[card.getId()];
+    isUsed[card.getId()] = true;
+  }
+
+  for (auto card: dead.getCards()) {
+    isValidGame &= !isUsed[card.getId()];
+    isUsed[card.getId()] = true;
+  }
+
+  if (!isValidGame) {
+    return equities;
+  }
+
+  vector<int> ranks(numPlayers);
+
+  vector<int> starts(5, 1);
+  vector<int> ends(5, Card::MAX_ID);
+
+  for (size_t i = 0; i < board.getCards().size(); ++i) {
+    starts[i] = ends[i] = board.getCards()[i].getId();
+  }
+
+  for (int h0 = starts[0]; h0 <= ends[0]; ++h0) {
+    if (board.getCards().size() <= 0 && isUsed[h0]) {
+      continue;
+    }
+
+    if (board.getCards().size() <= 0) {
+      isUsed[h0] = true;
+      starts[1] = h0 + 1;
+    }
+
+    for (int h1 = starts[1]; h1 <= ends[1]; ++h1) {
+      if (board.getCards().size() <= 1 && isUsed[h1]) {
+        continue;
+      }
+
+      if (board.getCards().size() <= 1) {
+        isUsed[h1] = true;
+        starts[2] = h1 + 1;
+      }
+
+      for (int h2 = starts[2]; h2 <= ends[2]; ++h2) {
+        if (board.getCards().size() <= 2 && isUsed[h2]) {
+          continue;
+        }
+
+        if (board.getCards().size() <= 2) {
+          isUsed[h2] = true;
+          starts[3] = h2 + 1;
+        }
+
+        for (int h3 = starts[3]; h3 <= ends[3]; ++h3) {
+          if (board.getCards().size() <= 3 && isUsed[h3]) {
+            continue;
+          }
+
+          if (board.getCards().size() <= 3) {
+            isUsed[h3] = true;
+            starts[4] = h3 + 1;
+          }
+
+          for (int h4 = starts[4]; h4 <= ends[4]; ++h4) {
+            if (board.getCards().size() <= 4 && isUsed[h4]) {
+              continue;
+            }
+
+            int maxRank = -1;
+            int numBestPlayers = 0;
+
+            array<int, 5> currentBoard = {h0, h1, h2, h3, h4};
+
+            for (size_t i = 0; i < numPlayers; ++i) {
+              size_t numCards = hands[i].getCards().size();
+
+              for (int b0 = 0; b0 < 5; ++b0) {
+                for (int b1 = b0 + 1; b1 < 5; ++b1) {
+                  for (int b2 = b1 + 1; b2 < 5; ++b2) {
+                    for (int p0 = 0; p0 < numCards; ++p0) {
+                      for (int p1 = p0 + 1; p1 < numCards; ++p1) {
+                        array<int, 5> currentHand = {
+                          currentBoard[b0],
+                          currentBoard[b1],
+                          currentBoard[b2],
+                          static_cast<int>(hands[i].getCards()[p0].getId()),
+                          static_cast<int>(hands[i].getCards()[p1].getId())
+                        };
+
+                        int currentRank = Card::MAX_ID + 1;
+                        for (int hand: currentHand) {
+                          currentRank = handRanks[currentRank + hand];
+                        }
+
+                        currentRank = handRanks[currentRank];
+                        ranks[i] = max(ranks[i], currentRank);
+                      }
+                    }
+                  }
+                }
+              }
+
+              if (maxRank == ranks[i]) {
+                ++numBestPlayers;
+              } else if (maxRank < ranks[i]) {
+                maxRank = ranks[i];
+                numBestPlayers = 1;
+              }
+            }
+
+            for (auto i = 0; i < numPlayers; ++i) {
+              if (ranks[i] == maxRank) {
+                equities[i].addTie(numBestPlayers);
+              } else {
+                equities[i].addLose();
+              }
+            }
+          }
+
+          if (board.getCards().size() <= 3) {
+            isUsed[h3] = false;
+          }
+        }
+
+        if (board.getCards().size() <= 2) {
+          isUsed[h2] = false;
+        }
+      }
+
+      if (board.getCards().size() <= 1) {
+        isUsed[h1] = false;
+      }
+    }
+
+    if (board.getCards().size() <= 0) {
+      isUsed[h0] = false;
+    }
+  }
+
+  return equities;
 }
