@@ -88,7 +88,7 @@ vector<Equity> Evaluator::evalRangesHelper(
     auto result = evalRangesHelper(gameType, ranges, board, dead, currHands);
     currHands.pop_back();
 
-    for (int i = 0; i < ranges.size(); ++i) {
+    for (size_t i = 0; i < ranges.size(); ++i) {
       equities[i].merge(result[i]);
     }
   }
@@ -193,7 +193,7 @@ vector<Equity> Evaluator::evalHoldemHands(
             int maxRank = -1;
             int numBestPlayers = 0;
 
-            for (auto i = 0; i < numPlayers; ++i) {
+            for (size_t i = 0; i < numPlayers; ++i) {
               ranks[i] = r4;
               for (auto card: hands[i].getCards()) {
                 ranks[i] = handRanks[ranks[i] + card.getId()];
@@ -207,7 +207,7 @@ vector<Equity> Evaluator::evalHoldemHands(
               }
             }
 
-            for (auto i = 0; i < numPlayers; ++i) {
+            for (size_t i = 0; i < numPlayers; ++i) {
               if (ranks[i] == maxRank) {
                 equities[i].addTie(numBestPlayers);
               } else {
@@ -329,26 +329,26 @@ vector<Equity> Evaluator::evalOmahaHands(
             int maxRank = -1;
             int numBestPlayers = 0;
 
-            array<int, 5> currentBoard = {h0, h1, h2, h3, h4};
+            array<int, 5> currentBoard = {{h0, h1, h2, h3, h4}};
 
             for (size_t i = 0; i < numPlayers; ++i) {
               size_t numCards = hands[i].getCards().size();
 
-              for (int b0 = 0; b0 < 5; ++b0) {
-                for (int b1 = b0 + 1; b1 < 5; ++b1) {
-                  for (int b2 = b1 + 1; b2 < 5; ++b2) {
-                    for (int p0 = 0; p0 < numCards; ++p0) {
-                      for (int p1 = p0 + 1; p1 < numCards; ++p1) {
-                        array<int, 5> currentHand = {
+              for (size_t b0 = 0; b0 < 5; ++b0) {
+                for (size_t b1 = b0 + 1; b1 < 5; ++b1) {
+                  for (size_t b2 = b1 + 1; b2 < 5; ++b2) {
+                    for (size_t p0 = 0; p0 < numCards; ++p0) {
+                      for (size_t p1 = p0 + 1; p1 < numCards; ++p1) {
+                        array<int, 5> currentHand = {{
                           currentBoard[b0],
                           currentBoard[b1],
                           currentBoard[b2],
                           static_cast<int>(hands[i].getCards()[p0].getId()),
                           static_cast<int>(hands[i].getCards()[p1].getId())
-                        };
+                        }};
 
                         int currentRank = Card::MAX_ID + 1;
-                        for (int hand: currentHand) {
+                        for (size_t hand: currentHand) {
                           currentRank = handRanks[currentRank + hand];
                         }
 
@@ -368,7 +368,7 @@ vector<Equity> Evaluator::evalOmahaHands(
               }
             }
 
-            for (auto i = 0; i < numPlayers; ++i) {
+            for (size_t i = 0; i < numPlayers; ++i) {
               if (ranks[i] == maxRank) {
                 equities[i].addTie(numBestPlayers);
               } else {

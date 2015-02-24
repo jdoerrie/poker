@@ -30,7 +30,7 @@ double Equity::toDouble() const {
   }
 
   double result = 0.0;
-  for (int i = 1; i < gameResults_.size(); ++i) {
+  for (size_t i = 1; i < gameResults_.size(); ++i) {
     result += static_cast<double>(gameResults_[i]) / i;
   }
 
@@ -42,7 +42,7 @@ void Equity::merge(const Equity& other) {
     gameResults_.resize(other.gameResults_.size());
   }
 
-  for (int i = 0; i < other.gameResults_.size(); ++i) {
+  for (size_t i = 0; i < other.gameResults_.size(); ++i) {
     gameResults_[i] += other.gameResults_[i];
   }
 

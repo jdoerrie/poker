@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Equity.h"
 #include "GameType.h"
 #include "Rank.h"
 #include "Suit.h"
+#include <vector>
 #include <string>
 
 class Utils {
@@ -12,6 +14,9 @@ class Utils {
 
   static char toChar(Rank rank);
   static char toChar(Suit suit);
+
+  static std::string getBashColor(Suit suit);
+  static std::string colorEquity(const Equity& equity);
 
   static int getNumCards(GameType gameType);
   static std::string getGameTypeName(GameType gameType);

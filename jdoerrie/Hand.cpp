@@ -11,7 +11,7 @@ Hand::Hand(const string& str) {
     return;
   }
 
-  for (int i = 0; i < str.size(); i += 2) {
+  for (size_t i = 0; i < str.size(); i += 2) {
     cards_.emplace_back(str[i], str[i+1]);
   }
 
@@ -125,16 +125,11 @@ void Hand::enumerateAllHandsHelper(
     ? 1
     : currHand.getCards()[0].getId() + 1;
 
-  for (int nextId = minId; nextId <= Card::MAX_ID; ++nextId) {
+  for (size_t nextId = minId; nextId <= Card::MAX_ID; ++nextId) {
     Hand nextHand = currHand;
     nextHand.addCard(Card(nextId));
     enumerateAllHandsHelper(hands, nextHand, numCards - 1);
   }
-}
-
-ostream& operator<<(ostream& out, const Hand& hand) {
-  out << hand.toString();
-  return out;
 }
 
 template<>

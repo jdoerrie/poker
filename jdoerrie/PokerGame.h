@@ -3,6 +3,7 @@
 #include "GameType.h"
 #include "Hand.h"
 #include "Range.h"
+#include "Utils.h"
 #include <vector>
 
 class Evaluator;

@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
   }
 
   vector<Range> ranges(players.size());
-  for (int i = 0; i < players.size(); ++i) {
+  for (size_t i = 0; i < players.size(); ++i) {
     cout << "Player " << i + 1 << ": " << players[i];
     cout << "\t(" << ranges[i].fromRegEx(players[i], gameType) << " combos)" << endl;
   }

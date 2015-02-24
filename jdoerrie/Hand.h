@@ -21,7 +21,10 @@ class Hand {
   bool containsCard(const Card& card) const;
 
   std::string toString(bool allRanksFirst = false) const;
-  friend std::ostream& operator<<(std::ostream& out, const Hand& hand);
+  friend std::ostream& operator<<(std::ostream& out, const Hand& hand) {
+    out << hand.toString();
+    return out;
+  }
 
   bool operator<(const Hand& other) const;
   bool operator==(const Hand& other) const;

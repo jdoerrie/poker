@@ -20,8 +20,12 @@ class Card {
   bool isValid() const;
   static std::vector<Card> enumerateAllCards();
 
-  std::string toString() const;
-  friend std::ostream& operator<<(std::ostream& out, const Card& c);
+  std::string toString(bool useColors = true) const;
+  friend std::ostream& operator<<(std::ostream& out, const Card& c) {
+    out << c.toString();
+    return out;
+  }
+
 
   bool operator<(const Card& other) const;
   bool operator==(const Card& other) const;

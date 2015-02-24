@@ -56,15 +56,21 @@ bool Card::isValid() const {
 
 vector<Card> Card::enumerateAllCards() {
   vector<Card> cards;
-  for (int id = 0; id < MAX_ID; ++id) {
+  for (size_t id = 0; id < MAX_ID; ++id) {
     cards.emplace_back(id + 1);
   }
 
   return cards;
 }
 
-string Card::toString() const {
-  return {Utils::toChar(rank_), Utils::toChar(suit_)};
+string Card::toString(bool uesColors) const {
+  if (uesColors) {
+    return Utils::getBashColor(suit_) +
+      Utils::toChar(rank_) + Utils::toChar(suit_) +
+      Utils::getBashColor(Suit::INVALID);
+  } else {
+    return {Utils::toChar(rank_), Utils::toChar(suit_)};
+  }
 }
 
 bool Card::operator<(const Card& other) const {
@@ -73,11 +79,6 @@ bool Card::operator<(const Card& other) const {
 
 bool Card::operator==(const Card& other) const {
   return getId() == other.getId();
-}
-
-ostream& operator<<(ostream& out, const Card& c) {
-  out << c.toString();
-  return out;
 }
 
 template<>

@@ -141,6 +141,48 @@ char Utils::toChar(Suit suit) {
   }
 }
 
+string Utils::getBashColor(Suit suit) {
+  switch(suit) {
+    case Suit::CLUBS:
+      return "\e[1;32m";
+
+    case Suit::DIAMONDS:
+      return "\e[1;34m";
+
+    case Suit::HEARTS:
+      return "\e[1;31m";
+
+    case Suit::SPADES:
+      return "\e[1;37m";
+
+    default:
+      return "\e[0m";
+  }
+}
+
+string Utils::colorEquity(const Equity& equity) {
+  static vector<string> gradient = {
+    "\e[38;5;196m",
+    "\e[38;5;202m",
+    "\e[38;5;208m",
+    "\e[38;5;214m",
+    "\e[38;5;220m",
+    "\e[38;5;226m",
+    "\e[38;5;190m",
+    "\e[38;5;154m",
+    "\e[38;5;118m",
+    "\e[38;5;82m",
+    "\e[38;5;46m"
+  };
+
+  size_t idx = static_cast<size_t>(equity.toDouble() * gradient.size());
+  if (idx == gradient.size()) {
+    --idx;
+  }
+
+  return gradient[idx] + to_string(equity.toDouble()) + "\e[0m";
+}
+
 int Utils::getNumCards(GameType gameType) {
   switch (gameType) {
     case GameType::HOLDEM:

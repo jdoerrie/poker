@@ -28,10 +28,10 @@ void PokerGame::printEquities() const {
   auto results = evaluator_.evalRanges(gameType_, ranges_, board_, dead_);
   cout << "Percentage Wins Losses Ties" << endl;
   for (const auto& result: results) {
-    cout << fixed << result.toDouble();
+    cout << fixed << Utils::colorEquity(result);
     cout << " " << result.getGameResults()[1];
     cout << " " << result.getGameResults()[0];
-    for (int i = 2; i < result.getGameResults().size(); ++i) {
+    for (size_t i = 2; i < result.getGameResults().size(); ++i) {
       cout << " " << result.getGameResults()[i];
     }
 
@@ -64,12 +64,12 @@ void PokerGame::printNextCards() const {
 
   sort(results.rbegin(), results.rend());
   cout << "Best Cards for Player 1:";
-  for (int i = 0; i < results.size(); ++i) {
+  for (size_t i = 0; i < results.size(); ++i) {
     if (i > 0 && results[i-1].first.toDouble() == results[i].first.toDouble()) {
       cout << ", " << results[i].second;
     } else {
       cout << endl;
-      cout << results[i].first << ": " << results[i].second;
+      cout << Utils::colorEquity(results[i].first) << ": " << results[i].second;
     }
   }
 
@@ -98,12 +98,13 @@ void PokerGame::printRangeBreakdown() const {
 
   sort(results.rbegin(), results.rend());
   cout << "Best Hands for Player 1:";
-  for (int i = 0; i < results.size(); ++i) {
+  for (size_t i = 0; i < results.size(); ++i) {
     if (i > 0 && results[i-1].first.toDouble() == results[i].first.toDouble()) {
-      cout << ", " << results[i].second.toString(true);
+      cout << ", " << results[i].second.toString();
     } else {
       cout << endl;
-      cout << results[i].first << ": " << results[i].second.toString(true);
+      cout << Utils::colorEquity(results[i].first) << ": "
+           << results[i].second.toString();
     }
   }
 
@@ -136,7 +137,7 @@ void PokerGame::setRanges(vector<Range> ranges) {
 }
 
 void PokerGame::setBoard(Hand board) {
-  board_ = std::move(board_);
+  board_ = std::move(board);
 }
 
 void PokerGame::setDead(Hand dead) {
