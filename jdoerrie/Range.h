@@ -15,6 +15,11 @@ class Range {
   const std::vector<Hand>& getHands() const;
 
  private:
+  std::string replaceSuitKeywords(std::string str);
+  std::string replaceIntervals(std::string str);
+  void normalize();
+
   std::vector<Hand> hands_;
   std::string description_;
+  GameType gameType_;
 };
