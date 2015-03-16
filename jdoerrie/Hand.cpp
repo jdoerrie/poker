@@ -132,10 +132,3 @@ void Hand::enumerateAllHandsHelper(
   }
 }
 
-template<>
-struct hash<Hand> {
-  size_t operator()(const Hand& hand) const {
-    return hand.getId();
-  }
-};
-

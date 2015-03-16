@@ -34,3 +34,12 @@ class Card {
   Rank rank_;
   Suit suit_;
 };
+
+namespace std {
+  template<>
+  struct hash<Card> {
+    size_t operator()(const Card& c) const {
+      return c.getId();
+    }
+  };
+}

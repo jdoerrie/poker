@@ -39,3 +39,12 @@ class Hand {
       const Hand& currHand,
       size_t numCards);
 };
+
+namespace std {
+  template<>
+  struct hash<Hand> {
+    size_t operator()(const Hand& hand) const {
+      return hand.getId();
+    }
+  };
+}

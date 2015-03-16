@@ -3,6 +3,7 @@
 #include "Evaluator.h"
 #include "Equity.h"
 #include "Card.h"
+#include <algorithm>
 #include <iostream>
 
 using namespace std;
