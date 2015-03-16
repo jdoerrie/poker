@@ -48,8 +48,9 @@ size_t Hand::getId() const {
 
 vector<Hand> Hand::enumerateAllHands(GameType gameType) {
   vector<Hand> hands;
-  enumerateAllHandsHelper(hands, {}, Utils::getNumCards(gameType));
+  enumerateAllHelper(hands, {}, Utils::getNumCards(gameType));
   sort(hands.begin(), hands.end());
+  hands.erase(unique(hands.begin(), hands.end()), hands.end());
   return hands;
 }
 
@@ -66,6 +67,17 @@ bool Hand::isValid(size_t numCards) const {
   return isValid;
 }
 
+vector<Hand> Hand::enumerateAllBoards(
+  const Hand& initialBoard,
+  const Hand& deadCards) {
+    int numCards = max(0, 5 - static_cast<int>(initialBoard.getCards().size()));
+  vector<Hand> boards;
+  enumerateAllHelper(boards, initialBoard, numCards, deadCards);
+  sort(std::begin(boards), std::end(boards));
+  boards.erase(unique(std::begin(boards), std::end(boards)), std::end(boards));
+  return boards;
+}
+
 bool Hand::addCard(const Card& card) {
   auto lower = lower_bound(cards_.rbegin(), cards_.rend(), card);
   if (lower != cards_.rend() && *lower == card) {
@@ -80,7 +92,7 @@ bool Hand::containsCard(const Card& card) const {
   return binary_search(cards_.rbegin(), cards_.rend(), card);
 }
 
-string Hand::toString(bool allRanksFirst) const {
+string Hand::toString(bool allRanksFirst, bool useColor) const {
   if (allRanksFirst) {
      string ranksStr, suitsStr;
     for (const Card& card: cards_) {
@@ -92,7 +104,7 @@ string Hand::toString(bool allRanksFirst) const {
   } else {
     string str;
     for (const Card& card: cards_) {
-      str += card.toString();
+      str += card.toString(useColor);
     }
 
     return str;
@@ -112,30 +124,24 @@ void Hand::normalize() {
   cards_.erase(unique(cards_.begin(), cards_.end()), cards_.end());
 }
 
-void Hand::enumerateAllHandsHelper(
+void Hand::enumerateAllHelper(
     vector<Hand>& hands,
     const Hand& currHand,
-    size_t numCards) {
+    size_t numCards,
+    const Hand& deadCards) {
   if (numCards == 0) {
     hands.push_back(currHand);
     return;
   }
 
-  int minId = currHand.getCards().empty()
-    ? 1
-    : currHand.getCards()[0].getId() + 1;
+  for (size_t nextId = 1; nextId <= Card::MAX_ID; ++nextId) {
+    Card nextCard(nextId);
+    if (currHand.containsCard(nextCard) || deadCards.containsCard(nextCard)) {
+      continue;
+    }
 
-  for (size_t nextId = minId; nextId <= Card::MAX_ID; ++nextId) {
     Hand nextHand = currHand;
-    nextHand.addCard(Card(nextId));
-    enumerateAllHandsHelper(hands, nextHand, numCards - 1);
+    nextHand.addCard(nextCard);
+    enumerateAllHelper(hands, nextHand, numCards - 1);
   }
 }
-
-template<>
-struct hash<Hand> {
-  size_t operator()(const Hand& hand) const {
-    return hand.getId();
-  }
-};
-

@@ -50,8 +50,8 @@ int main(int argc, char *argv[]) {
   }
 
   if (mode.empty() || game.empty() || handsStr.empty()) {
-    cout << argv[0] << " --mode=[eval, card, hand] --game=[holdem, omaha] "
-      "--hands [--board, --dead]\n";
+    cout << argv[0] << " --mode=[eval, card, hand, classes] "
+    "--game=[holdem, omaha, omaha5] --hands [--board, --dead]\n";
     return 1;
   }
 
@@ -85,6 +85,11 @@ int main(int argc, char *argv[]) {
     pokerGame.printNextCards();
   } else if (mode == "hand") {
     pokerGame.printRangeBreakdown();
+  } else if (mode == "classes") {
+    cout << "Value Hands:\n";
+    pokerGame.printCategories();
+    cout << "\nDraws:\n";
+    pokerGame.printDraws(0.05);
   }
 
   return 0;

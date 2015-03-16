@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Category.h"
 #include "Equity.h"
 #include "GameType.h"
 #include "Rank.h"
@@ -14,6 +15,8 @@ class Utils {
 
   static char toChar(Rank rank);
   static char toChar(Suit suit);
+
+  static std::string toString(Category category);
 
   static std::string getBashColor(Suit suit);
   static std::string colorEquity(const Equity& equity);

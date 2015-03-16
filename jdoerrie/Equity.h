@@ -11,8 +11,8 @@ class Equity {
   void addTie(size_t numPlayers);
   void addLose();
 
-  int getNumGames() const;
-  const std::vector<int>& getGameResults() const;
+  size_t getNumGames() const;
+  const std::vector<size_t>& getGameResults() const;
 
   double toDouble() const;
   void merge(const Equity& other);
@@ -23,6 +23,6 @@ class Equity {
  private:
   void addGame(size_t result);
 
-  std::vector<int> gameResults_;
-  int numGames_;
+  std::vector<size_t> gameResults_;
+  size_t numGames_;
 };
