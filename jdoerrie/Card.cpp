@@ -81,9 +81,3 @@ bool Card::operator==(const Card& other) const {
   return getId() == other.getId();
 }
 
-template<>
-struct hash<Card> {
-  size_t operator()(const Card& c) const {
-    return c.getId();
-  }
-};

@@ -46,9 +46,11 @@ class Hand {
       const Hand& deadCards = {});
 };
 
-template<>
-struct std::hash<Hand> {
-  size_t operator()(const Hand& hand) const {
-    return hand.getId();
-  }
-};
+namespace std {
+  template<>
+  struct hash<Hand> {
+    size_t operator()(const Hand& hand) const {
+      return hand.getId();
+    }
+  };
+}

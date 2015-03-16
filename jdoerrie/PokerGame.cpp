@@ -4,6 +4,7 @@
 #include "Evaluator.h"
 #include "Equity.h"
 #include "Utils.h"
+#include <algorithm>
 #include <iostream>
 #include <map>
 
