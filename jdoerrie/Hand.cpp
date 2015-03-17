@@ -6,30 +6,40 @@
 
 using namespace std;
 
-Hand::Hand(const string& str) {
+const size_t Hand::MAX_ID = 0x1ffffffffffffeLL;
+const size_t Hand::INVALID_ID = 1;
+
+Hand::Hand(const string& str) : id_(INVALID_ID) {
   if (str.size() % 2 == 1) {
     return;
   }
 
+  id_ = 0;
   for (size_t i = 0; i < str.size(); i += 2) {
     cards_.emplace_back(str[i], str[i+1]);
+    id_ |= 1LL << cards_.back().getId();
   }
 
   normalize();
 }
 
-Hand::Hand(vector<Card> cards) {
-  cards_ = move(cards);
+Hand::Hand(const vector<Card>& cards) : id_(INVALID_ID), cards_(cards) {
+  id_ = 0;
+  for (const auto& card: cards) {
+    id_ |= 1LL << card.getId();
+  }
+
   normalize();
 }
 
-Hand::Hand(size_t id) {
+Hand::Hand(size_t id) : id_(id) {
   while (id != 0) {
-    cards_.emplace_back(id % (Card::MAX_ID + 1));
-    id /= (Card::MAX_ID + 1);
+    int cardId = __builtin_ctz(id);
+    cards_.emplace_back(cardId);
+    id ^= 1LL << cardId;
   }
 
-  normalize();
+  std::reverse(std::begin(cards_), std::end(cards_));
 }
 
 const vector<Card>& Hand::getCards() const {
@@ -37,13 +47,7 @@ const vector<Card>& Hand::getCards() const {
 }
 
 size_t Hand::getId() const {
-  size_t id = 0;
-  for (const Card& card: cards_) {
-    id *= (Card::MAX_ID + 1);
-    id += card.getId();
-  }
-
-  return id;
+  return id_;
 }
 
 vector<Hand> Hand::enumerateAllHands(GameType gameType) {
@@ -55,16 +59,7 @@ vector<Hand> Hand::enumerateAllHands(GameType gameType) {
 }
 
 bool Hand::isValid(size_t numCards) const {
-  if (numCards != 0 && cards_.size() != numCards) {
-    return false;
-  }
-
-  bool isValid = true;
-  for (const Card& card: cards_) {
-    isValid &= card.isValid();
-  }
-
-  return isValid;
+  return !(id_ & 1LL) && __builtin_popcount(id_) == static_cast<int>(numCards);
 }
 
 vector<Hand> Hand::enumerateAllBoards(
@@ -79,17 +74,18 @@ vector<Hand> Hand::enumerateAllBoards(
 }
 
 bool Hand::addCard(const Card& card) {
-  auto lower = lower_bound(cards_.rbegin(), cards_.rend(), card);
-  if (lower != cards_.rend() && *lower == card) {
+  if (containsCard(card)) {
     return false;
   }
 
+  id_ |= (1LL << card.getId());
+  auto lower = lower_bound(cards_.rbegin(), cards_.rend(), card);
   cards_.insert(lower.base(), card);
   return true;
 }
 
 bool Hand::containsCard(const Card& card) const {
-  return binary_search(cards_.rbegin(), cards_.rend(), card);
+  return id_ & (1LL << card.getId());
 }
 
 string Hand::toString(bool allRanksFirst, bool useColor) const {

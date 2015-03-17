@@ -8,8 +8,11 @@ class Card;
 
 class Hand {
  public:
+  static const size_t MAX_ID;
+  static const size_t INVALID_ID;
+
   Hand(const std::string& str = "");
-  Hand(std::vector<Card> cards);
+  Hand(const std::vector<Card>& cards);
   Hand(size_t id);
 
   const std::vector<Card>& getCards() const;
@@ -35,6 +38,7 @@ class Hand {
   bool operator==(const Hand& other) const;
 
  private:
+  size_t id_;
   std::vector<Card> cards_;
 
   void normalize();

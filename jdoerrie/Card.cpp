@@ -5,30 +5,34 @@
 using namespace std;
 
 const size_t Card::MAX_ID = 52;
+const size_t Card::INVALID_ID = 0;
 
-Card::Card(Rank rank, Suit suit) : rank_(rank), suit_(suit) {}
+Card::Card(Rank rank, Suit suit) : rank_(rank), suit_(suit) {
+  id_ = isValid() ? computeId() : INVALID_ID;
+}
 
 Card::Card(char cRank, char cSuit) {
   rank_ = Utils::toRank(cRank);
   suit_ = Utils::toSuit(cSuit);
+  id_ = isValid() ? computeId() : INVALID_ID;
 }
 
-Card::Card(const string& str) {
-  rank_ = Rank::INVALID;
-  suit_ = Suit::INVALID;
-
+Card::Card(const string& str) : rank_(Rank::INVALID), suit_(Suit::INVALID),
+                                id_(INVALID_ID) {
   if (str.size() != 2) {
     return;
   }
 
   rank_ = Utils::toRank(str[0]);
   suit_ = Utils::toSuit(str[1]);
+  id_ = isValid() ? computeId() : INVALID_ID;
 }
 
-Card::Card(size_t id) {
+Card::Card(size_t id) : id_(id) {
   --id;
   rank_ = static_cast<Rank>(id / 4 + 2);
   suit_ = static_cast<Suit>(id % 4 + 1);
+  id_ = isValid() ? id_ : INVALID_ID;
 }
 
 Rank Card::getRank() const {
@@ -40,14 +44,7 @@ Suit Card::getSuit() const {
 }
 
 size_t Card::getId() const {
-  if (!isValid()) {
-    return 0;
-  }
-
-  size_t cardId = (static_cast<size_t>(rank_) - 2) * 4
-                + (static_cast<size_t>(suit_) - 1) + 1;
-
-  return cardId;
+  return id_;
 }
 
 bool Card::isValid() const {
@@ -63,8 +60,8 @@ vector<Card> Card::enumerateAllCards() {
   return cards;
 }
 
-string Card::toString(bool uesColors) const {
-  if (uesColors) {
+string Card::toString(bool useColors) const {
+  if (useColors) {
     return Utils::getBashColor(suit_) +
       Utils::toChar(rank_) + Utils::toChar(suit_) +
       Utils::getBashColor(Suit::INVALID);
@@ -74,10 +71,14 @@ string Card::toString(bool uesColors) const {
 }
 
 bool Card::operator<(const Card& other) const {
-  return getId() < other.getId();
+  return id_ < other.id_;
 }
 
 bool Card::operator==(const Card& other) const {
-  return getId() == other.getId();
+  return id_ == other.id_;
 }
 
+size_t Card::computeId() const {
+  return (static_cast<size_t>(rank_) - 2) * 4 +
+         (static_cast<size_t>(suit_) - 1) + 1;
+}
