@@ -13,6 +13,7 @@ class Range {
 
   size_t fromRegEx(const std::string& str, GameType gameType);
   const std::vector<Hand>& getHands() const;
+  Range filter(const Hand& hand) const;
 
  private:
   std::string replaceSuitKeywords(std::string str);

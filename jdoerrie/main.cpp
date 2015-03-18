@@ -71,7 +71,9 @@ int main(int argc, char *argv[]) {
   vector<Range> ranges(players.size());
   for (size_t i = 0; i < players.size(); ++i) {
     cout << "Player " << i + 1 << ": " << players[i];
-    cout << "\t(" << ranges[i].fromRegEx(players[i], gameType) << " combos)" << endl;
+    int combs = ranges[i].fromRegEx(players[i], gameType);
+    ranges[i] = ranges[i].filter(board).filter(dead);
+    cout << "\t(" << ranges[i].getHands().size() << "/" << combs << " combos)\n";
   }
 
   cout << "Board: " << board << endl;

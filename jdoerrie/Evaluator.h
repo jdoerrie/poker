@@ -60,6 +60,12 @@ class Evaluator {
       const Hand& dead
   );
 
+  static std::vector<Equity> evalHoldemRanges(
+      const std::vector<Range>& ranges,
+      const Hand& board,
+      const Hand& dead
+  );
+
  private:
   static std::vector<Equity> evalRangesHelper(
       GameType gameType,
@@ -79,5 +85,18 @@ class Evaluator {
       const std::vector<Hand>& hands,
       const Hand& board,
       const Hand& dead
+  );
+
+
+
+  static void evalHoldemRangesHelper(
+    std::vector<Equity>& equities, int numCards, size_t currId, int currRank,
+    size_t usedIds, const std::vector<Range>& ranges
+  );
+
+  static void rankHoldemRanges(
+    std::vector<Equity>& equities, size_t numPlayers, int boardRank,
+    const std::vector<Range>& ranges, std::vector<size_t>& indices,
+    size_t usedIds
   );
 };

@@ -34,9 +34,9 @@ Hand::Hand(const vector<Card>& cards) : id_(INVALID_ID), cards_(cards) {
 
 Hand::Hand(size_t id) : id_(id) {
   while (id != 0) {
-    int cardId = __builtin_ctz(id);
+    int cardId = __builtin_ctzll(id);
     cards_.emplace_back(cardId);
-    id ^= 1LL << cardId;
+    id &= ~(1LL << cardId);
   }
 
   std::reverse(std::begin(cards_), std::end(cards_));
@@ -59,7 +59,7 @@ vector<Hand> Hand::enumerateAllHands(GameType gameType) {
 }
 
 bool Hand::isValid(size_t numCards) const {
-  return !(id_ & 1LL) && __builtin_popcount(id_) == static_cast<int>(numCards);
+  return !(id_ & 1LL) && __builtin_popcountll(id_) == static_cast<int>(numCards);
 }
 
 vector<Hand> Hand::enumerateAllBoards(

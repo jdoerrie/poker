@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Equity::Equity() : numGames_(0) {}
+Equity::Equity() : gameResults_(3), numGames_(0) {}
 
 void Equity::addWin() {
   addGame(1);

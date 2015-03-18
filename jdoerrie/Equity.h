@@ -8,7 +8,7 @@ class Equity {
   Equity();
 
   void addWin();
-  void addTie(size_t numPlayers);
+  void addTie(size_t numPlayers = 2);
   void addLose();
 
   size_t getNumGames() const;

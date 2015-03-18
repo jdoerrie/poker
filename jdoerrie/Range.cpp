@@ -40,6 +40,17 @@ const vector<Hand>& Range::getHands() const {
   return hands_;
 }
 
+Range Range::filter(const Hand& hand) const {
+  vector<Hand> newHands;
+  for (const auto& hand_: hands_) {
+    if ((hand.getId() & hand_.getId()) == 0) {
+      newHands.push_back(hand_);
+    }
+  }
+
+  return newHands;
+}
+
 
 string Range::replaceSuitKeywords(string str) {
   size_t numCards = Utils::getNumCards(gameType_);

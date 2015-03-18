@@ -49,6 +49,10 @@ vector<Equity> Evaluator::evalRanges(
     const Hand& board,
     const Hand& dead
 ) {
+  if (gameType == GameType::HOLDEM) {
+    return evalHoldemRanges(ranges, board, dead);
+  }
+
   return evalRangesHelper(gameType, ranges, board, dead);
 }
 
@@ -398,4 +402,125 @@ vector<Equity> Evaluator::evalOmahaHands(
   }
 
   return equities;
+}
+
+vector<Equity> Evaluator::evalHoldemRanges(const vector<Range>& ranges,
+    const Hand& board, const Hand& dead) {
+  int numPlayers = ranges.size();
+
+  vector<Equity> equities(numPlayers);
+  if (board.getId() & dead.getId()) {
+    return equities;
+  }
+
+  size_t usedIds = board.getId() | dead.getId();
+
+  int handRank = Card::MAX_ID + 1;
+  for (const auto& card: board.getCards()) {
+    handRank = handRanks[handRank + card.getId()];
+  }
+
+  evalHoldemRangesHelper(equities, board.getCards().size(), 1, handRank,
+    usedIds, ranges);
+
+  return equities;
+}
+
+
+void Evaluator::evalHoldemRangesHelper(vector<Equity>& equities, int numCards,
+    size_t currId, int currRank, size_t usedIds, const vector<Range>& ranges) {
+  if (numCards == 5) {
+    vector<size_t> indices(ranges.size());
+    rankHoldemRanges(equities, 0, currRank, ranges, indices, usedIds);
+    return;
+  }
+
+  while (currId <= Card::MAX_ID) {
+    if (usedIds & (1LL << currId)) {
+      ++currId;
+      continue;
+    }
+
+    evalHoldemRangesHelper(equities, numCards + 1, currId + 1,
+      handRanks[currRank + currId], usedIds | (1LL << currId), ranges);
+    ++currId;
+  }
+}
+
+void Evaluator::rankHoldemRanges(vector<Equity>& equities, size_t numPlayers,
+    int boardRank, const vector<Range>& ranges, vector<size_t>& indices,
+    size_t usedIds) {
+  if (ranges.size() == 2) { // optimized for heads-up
+    for (const auto& hero: ranges[0].getHands()) {
+      if (hero.getId() & usedIds) {
+        continue;
+      }
+
+      int heroRank = boardRank;
+      heroRank = handRanks[heroRank + hero.getCards()[0].getId()];
+      heroRank = handRanks[heroRank + hero.getCards()[1].getId()];
+
+      for (const auto& vill: ranges[1].getHands()) {
+        if (vill.getId() & (usedIds | hero.getId())) {
+          continue;
+        }
+
+        int villRank = boardRank;
+        villRank = handRanks[villRank + vill.getCards()[0].getId()];
+        villRank = handRanks[villRank + vill.getCards()[1].getId()];
+
+        if (heroRank > villRank) {
+          equities[0].addWin();
+          equities[1].addLose();
+        } else if (heroRank < villRank) {
+          equities[0].addLose();
+          equities[1].addWin();
+        } else {
+          equities[0].addTie();
+          equities[1].addTie();
+        }
+      }
+    }
+
+    return;
+  }
+
+
+  if (numPlayers == ranges.size()) {
+    vector<int> ranks(numPlayers, boardRank);
+
+    int maxRank = -1;
+    int numBestPlayers = 0;
+    for (size_t i = 0; i < numPlayers; ++i) {
+      const auto& cards = ranges[i].getHands()[indices[i]].getCards();
+      ranks[i] = handRanks[ranks[i] + cards[0].getId()];
+      ranks[i] = handRanks[ranks[i] + cards[1].getId()];
+      if (maxRank == ranks[i]) {
+        ++numBestPlayers;
+      } else if (maxRank < ranks[i]) {
+        maxRank = ranks[i];
+        numBestPlayers = 1;
+      }
+    }
+
+    for (size_t i = 0; i < numPlayers; ++i) {
+      if (ranks[i] == maxRank) {
+        equities[i].addTie(numBestPlayers);
+      } else {
+        equities[i].addLose();
+      }
+    }
+
+    return;
+  }
+
+  size_t& currIdx = indices[numPlayers];
+  for (currIdx = 0; currIdx < ranges[numPlayers].getHands().size(); ++currIdx) {
+    if (ranges[numPlayers].getHands()[currIdx].getId() & usedIds) {
+      continue;
+    }
+
+    rankHoldemRanges(equities, numPlayers + 1, boardRank, ranges, indices,
+      usedIds | ranges[numPlayers].getHands()[currIdx].getId());
+  }
 }
