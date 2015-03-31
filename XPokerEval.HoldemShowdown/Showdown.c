@@ -22,7 +22,7 @@ void InitDeck(void)
     h = deck;
     for (suit = kClubs; suit <= kSpades; ++suit)
         for (rank = 2; rank <= kA; ++rank) {
-            *h++ = Encode(rank, suit);
+            (h++)->as64Bits = Encode(rank, suit);
             dealt[i++] = false; }
 }
 
@@ -31,19 +31,22 @@ void Enum2GuysNoFlop(void)  /* special case for speed of EnumBoardsNoUnknown */
     int     deckIx0, deckIx1, deckIx2, deckIx3, deckIx4;
     Eval_T	handValue0, handValue1;
     int     wins0 = 0, splits0 = 0, pots = 0;
+    Hand_T  hand;
 
     for (deckIx0 = 0; deckIx0 <= limitIx0; ++deckIx0) {
         board[0] = deck[deckIx0];
         for (deckIx1 = deckIx0 + 1; deckIx1 <= limitIx1; ++deckIx1) {
-            board[1] = board[0] | deck[deckIx1];
+            CombineHands(board[1], board[0], deck[deckIx1]);
             for (deckIx2 = deckIx1 + 1; deckIx2 <= limitIx2; ++deckIx2) {
-                board[2] = board[1] | deck[deckIx2];
+                CombineHands(board[2], board[1], deck[deckIx2]);
                 for (deckIx3 = deckIx2 + 1; deckIx3 <= limitIx3; ++deckIx3) {
-                    board[3] = board[2] | deck[deckIx3];
+                    CombineHands(board[3], board[2], deck[deckIx3]);
                     for (deckIx4 = deckIx3 + 1; deckIx4 <= limitIx4; ++deckIx4) {
-                        board[4] = board[3] | deck[deckIx4];
-                        handValue0 = Hand_7_Eval(board[4] | holeHand[0]);
-                        handValue1 = Hand_7_Eval(board[4] | holeHand[1]);
+                        CombineHands(board[4], board[3], deck[deckIx4]);
+                        CombineHands(hand, board[4], holeHand[0]);
+                        handValue0 = Hand_7_Eval(hand);
+                        CombineHands(hand, board[4], holeHand[1]);
+                        handValue1 = Hand_7_Eval(hand);
                         /* wins[1], splits[1], and partialPots are inferred below */
                         ++pots;
                         if (handValue0 > handValue1)
@@ -66,7 +69,7 @@ void Enum2GuysNoFlop(void)  /* special case for speed of EnumBoardsNoUnknown */
                                                         \
     bestEval = 0;                                       \
     for (i = 0; i < nPlayers; ++i) {                    \
-        player = board[4] | holeHand[i];                \
+        CombineHands(player, board[4], holeHand[i]);    \
         handValue[i] = eval = Hand_7_Eval(player);      \
         if (eval > bestEval) {                          \
             bestEval = eval;                            \
@@ -99,45 +102,45 @@ void EnumBoardsNoUnknown(void)
             for (deckIx0 = 0; deckIx0 <= limitIx0; ++deckIx0) {
                 board[0] = deck[deckIx0];
                 for (deckIx1 = deckIx0 + 1; deckIx1 <= limitIx1; ++deckIx1) {
-                    board[1] = board[0] | deck[deckIx1];
+                    CombineHands(board[1], board[0], deck[deckIx1]);
                     for (deckIx2 = deckIx1 + 1; deckIx2 <= limitIx2; ++deckIx2) {
-                        board[2] = board[1] | deck[deckIx2];
+                        CombineHands(board[2], board[1], deck[deckIx2]);
                         for (deckIx3 = deckIx2 + 1; deckIx3 <= limitIx3; ++deckIx3) {
-                            board[3] = board[2] | deck[deckIx3];
+                            CombineHands(board[3], board[2], deck[deckIx3]);
                             for (deckIx4 = deckIx3 + 1; deckIx4 <= limitIx4; ++deckIx4) {
-                                board[4] = board[3] | deck[deckIx4];
+                                CombineHands(board[4], board[3], deck[deckIx4]);
                                 mPotResults } } } } }
             break;
         case 1:
             for (deckIx1 = 0; deckIx1 <= limitIx1; ++deckIx1) {
-                board[1] = board[0] | deck[deckIx1];
+                CombineHands(board[1], board[0], deck[deckIx1]);
                 for (deckIx2 = deckIx1 + 1; deckIx2 <= limitIx2; ++deckIx2) {
-                    board[2] = board[1] | deck[deckIx2];
+                    CombineHands(board[2], board[1], deck[deckIx2]);
                     for (deckIx3 = deckIx2 + 1; deckIx3 <= limitIx3; ++deckIx3) {
-                        board[3] = board[2] | deck[deckIx3];
+                        CombineHands(board[3], board[2], deck[deckIx3]);
                         for (deckIx4 = deckIx3 + 1; deckIx4 <= limitIx4; ++deckIx4) {
-                            board[4] = board[3] | deck[deckIx4];
+                            CombineHands(board[4], board[3], deck[deckIx4]);
                             mPotResults } } } }
             break;
         case 2:
             for (deckIx2 = 0; deckIx2 <= limitIx2; ++deckIx2) {
-                board[2] = board[0] | deck[deckIx2];
+                CombineHands(board[2], board[0], deck[deckIx2]);
                 for (deckIx3 = deckIx2 + 1; deckIx3 <= limitIx3; ++deckIx3) {
-                    board[3] = board[2] | deck[deckIx3];
+                    CombineHands(board[3], board[2], deck[deckIx3]);
                     for (deckIx4 = deckIx3 + 1; deckIx4 <= limitIx4; ++deckIx4) {
-                        board[4] = board[3] | deck[deckIx4];
+                        CombineHands(board[4], board[3], deck[deckIx4]);
                         mPotResults } } }
             break;
         case 3:
             for (deckIx3 = 0; deckIx3 <= limitIx3; ++deckIx3) {
-                board[3] = board[0] | deck[deckIx3];
+                CombineHands(board[3], board[0], deck[deckIx3]);
                 for (deckIx4 = deckIx3 + 1; deckIx4 <= limitIx4; ++deckIx4) {
-                    board[4] = board[3] | deck[deckIx4];
+                    CombineHands(board[4], board[3], deck[deckIx4]);
                     mPotResults } }
             break;
         case 4:
             for (deckIx4 = 0; deckIx4 <= limitIx4; ++deckIx4) {
-                board[4] = board[0] | deck[deckIx4];
+                CombineHands(board[4], board[0], deck[deckIx4]);
                 mPotResults }
     } /* end switch */
 }
@@ -154,7 +157,7 @@ void EnumUnknowns(void)
             for (deckIx1 = deckIx0 + 1; deckIx1 <= limitIx4; ++deckIx1) {
                 if (dealt[deckIx1])
                     continue;
-                holeHand[firstUnknown] = deck[deckIx0] | deck[deckIx1];
+                CombineHands(holeHand[firstUnknown], deck[deckIx0], deck[deckIx1]);
                 mPotResults } }
     } else {
         for (deckIx0 = 0; deckIx0 <= limitIx1; ++deckIx0) {
@@ -173,14 +176,14 @@ void EnumUnknowns(void)
                             w/r the results of interest, to the first holding yz and the second wx.
                             So we just one of the two cases and double the total of wins, splits,
                             etc. later. */
-                        holeHand[firstUnknown] = deck[deckIx0] | deck[deckIx1];
-                        holeHand[firstUnknown+1] = deck[deckIx2] | deck[deckIx3];
+                        CombineHands(holeHand[firstUnknown], deck[deckIx0], deck[deckIx1]);
+                        CombineHands(holeHand[firstUnknown+1], deck[deckIx2], deck[deckIx3]);
                         mPotResults
-                        holeHand[firstUnknown] = deck[deckIx0] | deck[deckIx2];
-                        holeHand[firstUnknown+1] = deck[deckIx1] | deck[deckIx3];
+                        CombineHands(holeHand[firstUnknown], deck[deckIx0], deck[deckIx2]);
+                        CombineHands(holeHand[firstUnknown+1], deck[deckIx1], deck[deckIx3]);
                         mPotResults
-                        holeHand[firstUnknown] = deck[deckIx0] | deck[deckIx3];
-                        holeHand[firstUnknown+1] = deck[deckIx1] | deck[deckIx2];
+                        CombineHands(holeHand[firstUnknown], deck[deckIx0], deck[deckIx3]);
+                        CombineHands(holeHand[firstUnknown+1], deck[deckIx1], deck[deckIx2]);
                         mPotResults } } } }
 		//double totals as indicated above
 		for (i = 0; i < nPlayers; i++) {
@@ -200,16 +203,16 @@ void EnumBoards(void)
                 board[0] = deck[deckIx0];
                 dealt[deckIx0] = true;
                 for (deckIx1 = deckIx0 + 1; deckIx1 <= limitIx1; ++deckIx1) {
-                    board[1] = board[0] | deck[deckIx1];
+                    CombineHands(board[1], board[0], deck[deckIx1]);
                     dealt[deckIx1] = true;
                     for (deckIx2 = deckIx1 + 1; deckIx2 <= limitIx2; ++deckIx2) {
-                        board[2] = board[1] | deck[deckIx2];
+                        CombineHands(board[2], board[1], deck[deckIx2]);
                         dealt[deckIx2] = true;
                         for (deckIx3 = deckIx2 + 1; deckIx3 <= limitIx3; ++deckIx3) {
-                            board[3] = board[2] | deck[deckIx3];
+                            CombineHands(board[3], board[2], deck[deckIx3]);
                             dealt[deckIx3] = true;
                             for (deckIx4 = deckIx3 + 1; deckIx4 <= limitIx4; ++deckIx4) {
-                                board[4] = board[3] | deck[deckIx4];
+                                CombineHands(board[4], board[3], deck[deckIx4]);
                                 dealt[deckIx4] = true;
                                 EnumUnknowns();
                                 dealt[deckIx4] = false; }
@@ -220,16 +223,16 @@ void EnumBoards(void)
             break;
         case 1:
             for (deckIx1 = 0; deckIx1 <= limitIx1; ++deckIx1) {
-                board[1] = board[0] | deck[deckIx1];
+                CombineHands(board[1], board[0], deck[deckIx1]);
                 dealt[deckIx1] = true;
                 for (deckIx2 = deckIx1 + 1; deckIx2 <= limitIx2; ++deckIx2) {
-                    board[2] = board[1] | deck[deckIx2];
+                    CombineHands(board[2], board[1], deck[deckIx2]);
                     dealt[deckIx2] = true;
                     for (deckIx3 = deckIx2 + 1; deckIx3 <= limitIx3; ++deckIx3) {
-                        board[3] = board[2] | deck[deckIx3];
+                        CombineHands(board[3], board[2], deck[deckIx3]);
                         dealt[deckIx3] = true;
                         for (deckIx4 = deckIx3 + 1; deckIx4 <= limitIx4; ++deckIx4) {
-                            board[4] = board[3] | deck[deckIx4];
+                            CombineHands(board[4], board[3], deck[deckIx4]);
                             dealt[deckIx4] = true;
                             EnumUnknowns();
                             dealt[deckIx4] = false; }
@@ -239,13 +242,13 @@ void EnumBoards(void)
             break;
         case 2:
             for (deckIx2 = 0; deckIx2 <= limitIx2; ++deckIx2) {
-               board[2] = board[0] | deck[deckIx2];
+               CombineHands(board[2], board[0], deck[deckIx2]);
                dealt[deckIx2] = true;
                for (deckIx3 = deckIx2 + 1; deckIx3 <= limitIx3; ++deckIx3) {
-                    board[3] = board[2] | deck[deckIx3];
+                    CombineHands(board[3], board[2], deck[deckIx3]);
                     dealt[deckIx3] = true;
                     for (deckIx4 = deckIx3 + 1; deckIx4 <= limitIx4; ++deckIx4) {
-                        board[4] = board[3] | deck[deckIx4];
+                        CombineHands(board[4], board[3], deck[deckIx4]);
                         dealt[deckIx4] = true;
                         EnumUnknowns();
                         dealt[deckIx4] = false; }
@@ -254,10 +257,10 @@ void EnumBoards(void)
             break;
         case 3:
             for (deckIx3 = 0; deckIx3 <= limitIx3; ++deckIx3) {
-                board[3] = board[0] | deck[deckIx3];
+                CombineHands(board[3], board[0], deck[deckIx3]);
                 dealt[deckIx3] = true;
                 for (deckIx4 = deckIx3 + 1; deckIx4 <= limitIx4; ++deckIx4) {
-                    board[4] = board[3] | deck[deckIx4];
+                    CombineHands(board[4], board[3], deck[deckIx4]);
                     dealt[deckIx4] = true;
                     EnumUnknowns();
                     dealt[deckIx4] = false; }
@@ -265,7 +268,7 @@ void EnumBoards(void)
             break;
         case 4:
             for (deckIx4 = 0; deckIx4 <= limitIx4; ++deckIx4) {
-                board[4] = board[0] | deck[deckIx4];
+                CombineHands(board[4], board[0], deck[deckIx4]);
                 dealt[deckIx4] = true;
                 EnumUnknowns();
                 dealt[deckIx4] = false; }
@@ -390,7 +393,7 @@ int GetNextCard(char *string, int *offset, Hand_T *h)
         case 'h':   suit = kHearts;     break;
         case 's':   suit = kSpades;     break;
         default:    printf("Bad suit \"%c\" (expecting one of c/d/h/s).\n", (int)s); return -1; }
-    *h = Encode(rank, suit);
+    h->as64Bits = Encode(rank, suit);
     if (dealt[(suit-kClubs)*13 + rank - 2]) {
         printf("There's only one ");
         PrintCard(stdout, h);
@@ -452,7 +455,7 @@ Boolean GetHoleCards(int *nPlayers)
         return false; }
     *nPlayers = card / 2;
     for (i = 0; i < *nPlayers; ++i) {
-        holeHand[i] = holeCard[2*i] | holeCard[2*i + 1]; }
+        CombineHands(holeHand[i], holeCard[2*i], holeCard[2*i + 1]); }
     return true;
 }
 
@@ -461,7 +464,7 @@ Boolean GetBoard(int *nBoardCards, Hand_T *board)
     char        s[81];
     int         offset, i;
 
-    *board = 0;
+    ZeroHand(*board);
     *nBoardCards = 0;
     if (!GetResponse("Known board cards [none]: ", s, 80,
     "If no board cards are known (there's no flop yet) just press Return or Enter.\n"
@@ -471,7 +474,7 @@ Boolean GetBoard(int *nBoardCards, Hand_T *board)
     	return false;
     offset = 0;
     while ((i = GetNextCard(s, &offset, &boardCard[*nBoardCards])) > 0) {
-        *board |= boardCard[*nBoardCards];
+        AddHandTo(*board, boardCard[*nBoardCards]);
         if (++*nBoardCards > 4)
             break; }
     if (i < 0)
@@ -587,9 +590,6 @@ Boolean UserConfirm(double nDeals)
 void Initialize(void)
 {
     Boolean     resultsCreated;
-#ifdef __Mac__
-    HFileParam  PB;
-#endif
 
     if (!(resultsCreated = ((out = fopen(kOutFileName, "r")) == 0)))
         fclose(out);
@@ -597,50 +597,15 @@ void Initialize(void)
         exit(errno);
     if (resultsCreated) {
         fprintf(out, "View this file with a fixed-width font such as Courier");
-#ifdef __Mac__
-		fprintf(out, " or Monaco");
-#endif
 		fprintf(out, "\n"); }
-#ifdef __Mac__
-    PB.ioNamePtr = "\p"kOutFileName;
-    PB.ioVRefNum = -LMGetSFSaveDisk();
-    PB.ioDirID = LMGetCurDirStore();
-    PB.ioFDirIndex = 0;
-    if (PBHGetFInfoSync((HParmBlkPtr)&PB) == noErr) {
-            PB.ioFlFndrInfo.fdCreator = kFileCreator;
-            PB.ioDirID = LMGetCurDirStore();
-            PBHSetFInfoSync((HParmBlkPtr)&PB); }
-#endif
-#ifdef THINK_C
-    console_options.title = "\pHold¼Em Showdown";
-#endif
-#ifdef __MWERKS__
-	SIOUXSettings.asktosaveonclose = false;
-    SIOUXSettings.rows = 25;
-    SIOUXSettings.columns = 80;
-#ifdef __Mac__
-    printf("\n");
-    SIOUXSetTitle("\pHold'Em Showdown");
-#else
-	SIOUXSetTitle("Hold'Em Showdown");
-#endif
-#endif
     if (!Init_Hand_Eval()) {
         printf("RAM allocation failure.\n");
         exit(0); }
-#ifdef __Mac__
-    printf("        Hold'Em Showdown version ");
-    printf(kVersion);
-    printf(" written by Steve Brecher\n");
-    printf("Deals all possible boards to get exact win probability for each hand specified.\n");
-    printf("Results written/appended to ""kOutFileName"" in Hold'Em Showdown's folder.\n");
-#else
     printf("        HoldEm Showdown version ");
     printf(kVersion);
     printf(" written by Steve Brecher\n");
     printf("Deals all possible boards to get exact win probability for each hand specified.\n");
     printf("Results written/appended to \""kOutFileName"\".\n");
-#endif
     printf("\nFor general help, type \"help\" or just \"h\" followed by Return or Enter.\n");
     printf("For help with a specific response, type \"?\" followed by Return or Enter.\n");
     output[0] = out;
@@ -739,7 +704,7 @@ double NbrEnumerations(void)
     return enums;
 }
 
-int main(void)
+int main (int argc, const char * argv[])
 {
     Boolean restart;
     char    s[81];
@@ -777,7 +742,6 @@ int main(void)
         if (restart) {
             printf("\nRestarting...\n");
             continue; }
-        IndicateWait();
 #if kTimer
         timer = clock();
 #endif

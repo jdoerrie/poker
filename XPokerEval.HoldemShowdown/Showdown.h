@@ -1,8 +1,12 @@
 /* Showdown.h */
 /* Hold'Em Showdown by Steve Brecher <steve@brecher.reno.nv.us> */
 
-#define kVersion "2006Dec01.0"
+#define kVersion "2010Jun20.1"
 /*
+ *	20Jun10.1	HandEval change
+ *	20Jun10.0	HandEval changes
+ *	23Aug08.0	Remove obsolete environment constants
+ *  23Jan07.0   Adapt to changes in HandEval
  *  01Dec06.0   Use dealt array; indexing rather than pointers to access deck.
  *  29Nov06.0	Enumerate boards before enumerating unknown player hole cards.
  *  24Nov06.0	Move inference of 2nd of 2 players results from ResultsOut to Enum2GuysNoFlop.
@@ -50,38 +54,9 @@
  *  07Feb95.0   first version without known bugs.
  */
 
-#ifdef __MWERKS__
-#ifdef macintosh
-#define __Mac__ /* compiled on/for a Macintosh */
-#if defined(powerc) || defined (__powerc)
-#define __PPC__
-#else
-#define __68K__
-#endif
-#endif
-#ifdef __INTEL__
-#define __Windows__
-#endif
 #include <stdio.h>
-#else
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-#include <stdio.h>
-#include <tchar.h>
-#endif
-
 #include <stdlib.h>
 #include <string.h>
-#ifdef THINK_C
-#include <console.h>
-#endif
-#ifdef __MWERKS__
-#ifdef __Mac__
-#include <SIOUX.h>
-#endif
-#ifdef __Windows__
-#include <WinSIOUX.SB.h>
-#endif
-#endif
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -91,33 +66,26 @@
 #define kTimer	1    /* output calculation time if non-zero */
 
 #if kTimer
-#ifdef __Mac__
-#define __dest_os   __mac_os
-#endif
 #include <time.h>
 #endif
 
-#ifndef __Mac__
 typedef unsigned char   Byte;
 enum {false, true};
 #define nil             NULL
 #define kOutFileName    "Showdown.txt"
-#else
-#define kOutFileName    "Showdown Results"
-#define kFileCreator    'R*ch'
-#endif
-
-#ifndef __Mac__
-#define IndicateWait()
-#else
-#define IndicateWait() SetCursor(*GetCursor(watchCursor))
-#endif
 
 #define kMaxPlayers 22 /* 5 board and 3 burn cards leaves 44 for hole cards */
 
-#include "HandEval.h"
+#include "../HandEval/HandEval.h"
+
 #if !d_flop_game
 #error "d_flop_game is zero!"
+#endif
+
+#ifndef true
+typedef unsigned char Boolean;
+#define false 0
+#define true 1
 #endif
 
 enum {kT = 10, kJ, kQ, kK, kA};

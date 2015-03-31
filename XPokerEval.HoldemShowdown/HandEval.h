@@ -1,7 +1,24 @@
 /* HandEval.h           by Steve Brecher */
 
 /*
- *  24Nov06.0   HandEval paramenter is four 13-bit fields in low order 52 bits.
+ *	26Jun10.0	Fix handRazzEval return for full house for AAAABBB rank pattern (make the
+ *					lower rank the trips rank and the other the pair rank rather than vice-versa).
+ *				Fix kicker ordering for handRazzEval one pair for AABBCCD rank pattern.
+ *	23Jun10.0	Fix initialization of lo3_8OBRanksMask and loMaskOrNo8Low:
+ *					remove rotation of mask which is unnecessary and was being done incorrectly.
+ *				Fix results of Hand_2_to_7_Eval for wheel and wheel flush.
+ *  20Jun10.1	Fix result of Hand_2_to_7_Eval for wheel flush.
+ *	20Jun10.0	Fix a two pair result and a pair result in Hand_Razz_Eval.
+ *				Fix a trips result in Hand_5_Eval.
+ *				Fix a trips result in Hand_5_Ato5Lo_Eval.
+ *				New function: Hand_2_to_7_Eval (Kansas City Lowball).
+ *	08May10.1	Fix trips result in Hand_6_Eval.
+ *	08May10.0	Fix one pair result in Hand_5_Eval.
+ *  23Aug08.0	If 64-bit ints, use uint64_t from stdint.h.
+ *  07Jan07.0   HandEval parameter and result the same as pokersource Eval_N.
+ *              Number of lookup tables reduced.
+ *              Portability improved.
+ *  24Nov06.0   HandEval parameter is four 13-bit fields in low order 52 bits.
  *              Rank masks 13 low-order bits instead of 14 bits -- kArraySize reduced by half.
  *              HandEval result for straight/straight flush specifies high rank, not 5-bit mask.
  *	08Nov06.0	__int64 (MS-specific) instead of int[4] for Hand_X_Eval argument
@@ -43,15 +60,27 @@
 #endif
 
 /*
- *  If d_flop_game is nonzero then evaluation result includes bits for
- *  non-playing kickers with quads or trips nor non-playing pair with full
- *  house.  This costs a little execution time.  I.e., set to zero for draw
+ *  If d_flop_game is nonzero then evaluation result includes cards for
+ *  kickers with quads or trips, and non-playing pair with full house.
+ *  This costs a little execution time.  I.e., set to zero for draw
  *  poker, stud poker, Chinese Poker; set to nonzero for hold 'em, Omaha,
  *  and other common-card games.
  */
 #ifndef d_flop_game
 #define d_flop_game 1
 #endif
+
+/* Comment out one of the following #defines */
+/* If appropriate change the following typedef as necessary */
+#define HAVE_INT64 1
+//#define HAVE_INT64 0
+
+#if HAVE_INT64
+#include <stdint.h>
+typedef uint64_t uint64;
+#endif
+
+typedef unsigned int uint32; /* used in Hand_T definition */
 
 /* Function which allocates zero-filled bytes on the heap: */
 /* optional for Macintosh: */
@@ -71,105 +100,178 @@
 #endif
 
 /*
-	 * A hand is 0 or more cards represented in four 13-bit masks, one
-	 * mask per suit, in the low-order 52 bits of a long (64 bits). In
-	 * each mask, bit 0 set (0x0001) for a deuce, ..., bit 12 set
-	 * (0x1000) for an ace. Each mask denotes the ranks present in one
-	 * of the suits.
+	 * A hand is 0 or more cards represented in four 16-bit masks, one
+	 * mask per suit, in a 64-bit integer. In each mask, bit 0 set (0x0001)
+     * for a deuce, ..., bit 12 set (0x1000) for an ace. Each mask denotes
+     * the ranks present in one of the suits.
  */
 
-#define Encode(rank, suit) (1i64 << (suit*13 + rank - 2))
+#define Encode(rank, suit) (((uint64)1) << (16*suit + rank - 2))
+#define IndexToMask(index) (((uint64)1) << (16*(index/13) + index%13))
 
-enum {kClubs, kDiamonds, kHearts, kSpades, kNbrOfMasks};
-/*
- *  Actually the order of the suit elements of the array is immaterial
- *	and this module uses only the k_Nbr_of_masks constant.
- */
-#define k_ace_mask      (0x00001000)
-#define k_deuce_mask    (0x00000001)
+enum {kClubs, kDiamonds, kHearts, kSpades, kNbrOfSuits}; /* ordering within Hand_T */
+/* The ordering is significant only to the Decode untility function */
 
 enum {NO_PAIR, PAIR, TWO_PAIR, THREE_OF_A_KIND,
         STRAIGHT, FLUSH, FULL_HOUSE, FOUR_OF_A_KIND, STRAIGHT_FLUSH};
 
-typedef unsigned long Eval_T; /*  Evaluation result in 32 bits = 0VTBMMMM
+typedef unsigned long Eval_T; /*  Evaluation result	*/
 	/*
-	 * Different functions are called for high and for lowball evaluation.  The
-	 * result format below is the same except:  For lowball evaluation, as for
-	 * wheels in high evaluation, Ace is rank 1 and its mask bit is the LS bit;
-	 * otherwise Ace is rank 14, mask bit 0x1000, and the deuce's mask bit is
-     * the LS bit.
+	 * Different functions are called for high and for lowball evaluation.
 	 *
-	 * For normal evaulation if results R1 > R2, hand 1 beats hand 2;
+	 * For high evaluation if results R1 > R2, hand 1 beats hand 2;
 	 * for lowball evaluation if results R1 > R2, hand 2 beats hand 1.
 	 *
-	 * Evaluation result in 32 bits = 0x0VTBKKKK:
+	 * Evaluation result in 32 bits = 0x0V0RRRRR where V, R are
+     * hex digits or "nybbles" (half-bytes).
 	 * 
 	 * V nybble = value code (NO_PAIR..STRAIGHT_FLUSH)
-	 * T nybble = rank (2..14) of top pair for two pair, 0 otherwise
-	 * B nybble = rank (1..14) of trips (including full house trips) or quads,
-	 *  			or rank of high card (5..14) in straight or straight flush,
-	 *              or rank of bottom pair for two pair (hence the symbol "B"),
-	 *              or rank of pair for one pair,
-	 *              or 0 otherwise
-	 * KKKK mask = 16-bit mask with...
-	 *              5 bits set for no pair or (non-straight-)flush
-	 *              3 bits set for kickers with pair,
+     * The R nybbles are the significant ranks (0..12), where 0 is the Ace
+     * in a lowball result (King is 12, 0xC), and otherwise 0 is the deuce
+     * (Ace is 0xC).  The Rs may be considered to consist of Ps for ranks
+     * which determine the primary value of the hand, and Ks for kickers
+     * where applicable.  Ordering is left-to-right:  first the Ps, then
+     * any Ks, then padding with 0s.  Because 0 is a valid rank, to
+     * deconstruct a result you must know how many ranks are significant,
+     * which is a function of the value code and whether high or lowball.
+     * E.g. (high where not indicated):
+     *  Royal flush: 0x080C0000
+     *  Four of a kind, Queens, with a 5 kicker:  0x070A3000
+     *  Threes full of eights:  0x06016000
+     *  Straight to the five (wheel): 0x04030000 (high)
+     *  Straight to the five (wheel): 0x04040000 (lowball)
+     *  One pair, deuces (0x0), with A65: 0x0100C430 (high)
+     *  One pair, deuces (0x1), with 65A: 0x01015400 (lowball)
+     *  No pair, KJT85: 0x000B9863
+     *  Razz, wheel:  0x00043210
+     *
+     * For the eight-or-better lowball ..._Eval functions, the result is
+     * either as above or the constant NO_8_LOW.  NO_8_LOW > any other
+     * ..._Eval function result.
 	 */
-#if d_flop_game
-	/*
-	 *              2 bits set for kickers with trips,
-	 *              1 bit set for pair with full house or kicker with quads
-   */
-#endif
-	/*				1 bit set for kicker with two pair
-	 *              or 0 otherwise
-	 */
-#define k_No8Low	0x0FFFFFFF;	/* eval result meaning no 8-or-better low */
+#define RESULT_VALUE_SHIFT  24
 
-typedef __int64	Hand_T;
+/* eval result meaning no 8-or-better low: */
+#define NO_8_LOW	0x0FFFFFFF
 
-#ifndef true
-typedef unsigned char Boolean;
-#define false 0
-#define true 1
+typedef union {
+    // assume little-endian (e.g., Intel) for now
+    struct {
+        unsigned short clubs;
+        unsigned short diamonds;
+        unsigned short hearts;
+        unsigned short spades;
+   } bySuit;
+#if HAVE_INT64
+    uint64 as64Bits;
+#else
+    struct {
+        uint32 cd;
+        uint32 hs;
+    } as2x32Bits;
 #endif
+} Hand_T;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/************
+ ************ AN Init_... FUNCTION MUST BE CALLED BEFORE
+ ************ CALLING ANY OTHER FUNCTION! (except Decode)
+ ************/
 #if d_asian
-d_prefix Boolean Init_Asian_Eval(void);   /* returns false if heap allocation
+d_prefix int Init_Asian_Eval(void);   /* returns false if heap allocation
                                             fails */
 d_prefix Eval_T Asian_5_Eval(Hand_T hand);
 #else
-d_prefix Boolean Init_Hand_Eval(void);    /* returns false if heap allocation
+d_prefix int Init_Hand_Eval(void);    /* returns false if heap allocation
                                             fails */
 d_prefix Eval_T Hand_7_Eval(Hand_T hand);
 d_prefix Eval_T Hand_6_Eval(Hand_T hand);
 d_prefix Eval_T Hand_5_Eval(Hand_T hand);
 d_prefix Eval_T Hand_5_Ato5Lo_Eval(Hand_T hand);
 d_prefix Eval_T Hand_Razz_Eval(Hand_T hand);
+d_prefix Eval_T Hand_2_to_7_Eval(Hand_T hand);
+
 d_prefix Eval_T Hand_8Low_Eval(Hand_T hand);
 d_prefix Eval_T Ranks_8Low_Eval(int ranks);
-d_prefix Eval_T No8LowValue(void);		/*	returns the constant ..._Eval() result
-											that means no 8-or-better low */
-d_prefix Eval_T Omaha8_Low_Eval(int twoHoleRanks, int boardRanks);
+d_prefix Eval_T Omaha8_Low_Eval(int twoHolesMask, int boardMask);
 
 #endif
 
 /* Utilities */
 /* Init_..._Eval must have been previously called! */
 /* mask argument must not exceed 0x1FC0 */
-d_prefix int Hi_Card_Mask(short mask);    /* result is mask with all bits except
-												 highest reset */
+d_prefix int Hi_Card_Rank(short mask);    /* rank of highest bit set */
 d_prefix int Number_Of_Ranks(short mask);    /* number of bits set in mask */
-d_prefix int Rank_Of_Hi_Card(short mask);    /* rank (0..kA) of highest bit set
-												in mask */
+
+/*
+ * Sets rank and suit of the first (usually only) card in hand
+ * looking in order of clubs, diamonds, hearts, spades and from
+ * low to high rank within each. If hand is empty *rank and
+ * *suit are unchanged.
+ */
 d_prefix void Decode(Hand_T hand, int *rank, int *suit);
+
+extern Hand_T emptyHand;
 
 #ifdef __cplusplus
 }
+#endif
+
+#define Hand_T_Rank_Suit_Table(tableName)  \
+    Hand_T tableName##[13][4] = {              \
+        {{   1,0,0,0}, {0,   1,0,0}, {0,0,   1,0}, {0,0,0,   1}}, \
+        {{   2,0,0,0}, {0,   2,0,0}, {0,0,   2,0}, {0,0,0,   2}}, \
+        {{   4,0,0,0}, {0,   4,0,0}, {0,0,   4,0}, {0,0,0,   4}}, \
+        {{   8,0,0,0}, {0,   8,0,0}, {0,0,   8,0}, {0,0,0,   8}}, \
+        {{  16,0,0,0}, {0,  16,0,0}, {0,0,  16,0}, {0,0,0,  16}}, \
+        {{  32,0,0,0}, {0,  32,0,0}, {0,0,  32,0}, {0,0,0,  32}}, \
+        {{  64,0,0,0}, {0,  64,0,0}, {0,0,  64,0}, {0,0,0,  64}}, \
+        {{ 128,0,0,0}, {0, 128,0,0}, {0,0, 128,0}, {0,0,0, 128}}, \
+        {{ 256,0,0,0}, {0, 256,0,0}, {0,0, 256,0}, {0,0,0, 256}}, \
+        {{ 512,0,0,0}, {0, 512,0,0}, {0,0, 512,0}, {0,0,0, 512}}, \
+        {{1024,0,0,0}, {0,1024,0,0}, {0,0,1024,0}, {0,0,0,1024}}, \
+        {{2048,0,0,0}, {0,2048,0,0}, {0,0,2048,0}, {0,0,0,2048}}, \
+        {{4096,0,0,0}, {0,4096,0,0}, {0,0,4096,0}, {0,0,0,4096}}  \
+   }
+
+#define Hand_T_Deck_Index_Table(tableName) \
+    Hand_T tableName##[52] = {                   \
+        {1,0,0,0}, {2,0,0,0}, {4,0,0,0}, {8,0,0,0}, {16,0,0,0}, {32,0,0,0}, {64,0,0,0}, \
+        {128,0,0,0}, {256,0,0,0}, {512,0,0,0}, {1024,0,0,0}, {2048,0,0,0}, {4096,0,0,0}, \
+        {0,1,0,0}, {0,2,0,0}, {0,4,0,0}, {0,8,0,0}, {0,16,0,0}, {0,32,0,0}, {0,64,0,0}, \
+        {0,128,0,0}, {0,256,0,0}, {0,512,0,0}, {0,1024,0,0}, {0,2048,0,0}, {0,4096,0,0}, \
+        {0,0,1,0}, {0,0,2,0}, {0,0,4,0}, {0,0,8,0}, {0,0,16,0}, {0,0,32,0}, {0,0,64,0}, \
+        {0,0,128,0}, {0,0,256,0}, {0,0,512,0}, {0,0,1024,0}, {0,0,2048,0}, {0,0,4096,0}, \
+        {0,0,0,1}, {0,0,0,2}, {0,0,0,4}, {0,0,0,8}, {0,0,0,16}, {0,0,0,32}, {0,0,0,64}, \
+        {0,0,0,128}, {0,0,0,256}, {0,0,0,512}, {0,0,0,1024}, {0,0,0,2048}, {0,0,0,4096} \
+    }
+
+#if HAVE_INT64
+#define AddHandTo(toThisHand, addThisHand) \
+    do { (toThisHand).as64Bits |= (addThisHand).as64Bits; } while (0)
+#define CombineHands(dest, source1, source2) \
+    do { (dest).as64Bits = (source1).as64Bits | (source2).as64Bits; } while (0)
+#define ZeroHand(hand) \
+    do { (hand).as64Bits = 0; } while (0)
+#else
+#define AddHandTo(addThisHand, toThisHand) \
+    do { \
+        (toThisHand).as2x32Bits.cd |= (addThisHand).as2x32Bits.cd; \
+        (toThisHand).as2x32Bits.hs |= (addThisHand).as2x32Bits.hs; \
+    while (0)
+#define CombineHands(dest, source1, source2) \
+    do { \
+        (dest).as2x32Bits.cd = (source1).as2x32Bits.cd | (source2).as2x32Bits.cd; \
+        (dest).as2x32Bits.hs = (source1).as2x32Bits.hs | (source2).as2x32Bits.hs; \
+    while (0)
+#define ZeroHand(hand) \
+    do { \
+        (hand).as2x32Bits.cd = 0; \
+        (hand).as2x32Bits.hs = 0; \
+    } while (0)
 #endif
 
 #endif  /* } */
