@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Equity::Equity() : numGames_(0) {}
+Equity::Equity() : gameResults_(3), numGames_(0) {}
 
 void Equity::addWin() {
   addGame(1);
@@ -16,11 +16,11 @@ void Equity::addLose() {
   addGame(0);
 }
 
-int Equity::getNumGames() const {
+size_t Equity::getNumGames() const {
   return numGames_;
 }
 
-const vector<int>& Equity::getGameResults() const {
+const vector<size_t>& Equity::getGameResults() const {
   return gameResults_;
 }
 

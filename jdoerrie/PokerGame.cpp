@@ -1,10 +1,12 @@
 #include "PokerGame.h"
 
+#include "Card.h"
 #include "Evaluator.h"
 #include "Equity.h"
-#include "Card.h"
+#include "Utils.h"
 #include <algorithm>
 #include <iostream>
+#include <map>
 
 using namespace std;
 
@@ -101,11 +103,10 @@ void PokerGame::printRangeBreakdown() const {
   cout << "Best Hands for Player 1:";
   for (size_t i = 0; i < results.size(); ++i) {
     if (i > 0 && results[i-1].first.toDouble() == results[i].first.toDouble()) {
-      cout << ", " << results[i].second.toString();
+      cout << ", " << results[i].second;
     } else {
       cout << endl;
-      cout << Utils::colorEquity(results[i].first) << ": "
-           << results[i].second.toString();
+      cout << Utils::colorEquity(results[i].first) << ": " << results[i].second;
     }
   }
 
@@ -113,6 +114,126 @@ void PokerGame::printRangeBreakdown() const {
 }
 
 
+void PokerGame::printCategories() const {
+  if (Utils::getNumCards(gameType_) + board_.getCards().size() < 5) {
+    cout << "Error: Need at least 5 cards for classification." << endl;
+    return;
+  }
+
+  size_t totalCounts = 0;
+  map<Category, vector<pair<int, Hand>>> categories;
+  for (const auto& hand: ranges_[0].getHands()) {
+    int handRank = Evaluator::getHandRank(
+      Hand(board_.toString() + hand.toString()));
+    if (handRank == 0) {
+      continue;
+    }
+
+    ++totalCounts;
+    categories[static_cast<Category>(handRank >> 12)].emplace_back(handRank, hand);
+  }
+
+  for (const auto& category: categories) {
+    cout << Utils::toString(category.first) << ": ";
+    auto hands = category.second;
+    sort(hands.rbegin(), hands.rend());
+    // cout << hands.size() << "/" << totalCounts << " "
+    //      << hands.size() / static_cast<double>(totalCounts) << " ";
+    for (auto hand: hands) {
+      cout << hand.second << (hand == *(hands.rbegin()) ? "\n" : " ");
+    }
+  }
+}
+
+void PokerGame::printDraws(double minProb) const {
+  if (Utils::getNumCards(gameType_) + board_.getCards().size() < 5) {
+    cerr << "Error: Need at least 5 cards for classification." << endl;
+    return;
+  }
+
+  if (minProb < 0.0 || minProb > 1.0) {
+    cerr << "Received invalid value for minimum draw probability, "
+            "clamping to [0, 1]";
+    minProb = max(0.0, min(1.0, minProb));
+  }
+
+
+  map<Category, vector<pair<double, Hand>>> draws;
+  auto allBoards = Hand::enumerateAllBoards(board_);
+
+  for (const auto& hand: ranges_[0].getHands()) {
+    bool isInvalid = false;
+    for (auto card: hand.getCards()) {
+      isInvalid |= board_.containsCard(card);
+      isInvalid |= dead_.containsCard(card);
+      if (isInvalid) {
+        break;
+      }
+    }
+
+    if (isInvalid) {
+      continue;
+    }
+
+    int handRank = Evaluator::getHandRank(
+      Hand(board_.toString() + hand.toString()));
+
+    vector<size_t> distribution(10);
+    size_t totalCount = 0;
+    size_t handRankTotal = 0;
+    for (const auto& board: allBoards) {
+      Hand thisHand(board.toString() + hand.toString());
+      bool isInvalid = false;
+      for (auto card: hand.getCards()) {
+        isInvalid |= board.containsCard(card);
+        if (isInvalid) {
+          break;
+        }
+      }
+
+      if (isInvalid) {
+        continue;
+      }
+
+      int thisHandRank = Evaluator::getHandRank(thisHand);
+
+      ++distribution[static_cast<size_t>(thisHandRank >> 12)];
+      ++totalCount;
+      handRankTotal += thisHandRank;
+    }
+
+    for (int category = 0; category < 10; ++category) {
+      if ((handRank >> 12) != category &&
+        distribution[category] / static_cast<double>(totalCount) >= minProb) {
+        draws[static_cast<Category>(category)].emplace_back(
+          handRankTotal / static_cast<double>(totalCount), hand);
+      }
+    }
+  }
+
+  for (auto& draw: draws) {
+    sort(draw.second.rbegin(), draw.second.rend());
+  }
+
+  vector<Category> drawCategories = {
+    Category::Straight,
+    Category::Flush,
+    Category::Straight_Flush
+  };
+
+  for (auto drawCategory: drawCategories) {
+    if (draws[drawCategory].empty()) {
+      continue;
+    }
+
+    cout << Utils::toString(drawCategory) << ": ";
+    const auto& hands = draws[drawCategory];
+
+    for (auto hand: hands) {
+      cout << hand.second << (hand == *(hands.rbegin()) ? "\n" : " ");
+    }
+  }
+}
 
 GameType PokerGame::getGameType() const {
   return gameType_;

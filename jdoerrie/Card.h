@@ -8,6 +8,7 @@
 class Card {
  public:
   static const size_t MAX_ID;
+  static const size_t INVALID_ID;
 
   Card(Rank rank = Rank::INVALID, Suit suit = Suit::INVALID);
   Card(char cRank, char cSuit);
@@ -20,9 +21,9 @@ class Card {
   bool isValid() const;
   static std::vector<Card> enumerateAllCards();
 
-  std::string toString(bool useColors = true) const;
+  std::string toString(bool useColor = false) const;
   friend std::ostream& operator<<(std::ostream& out, const Card& c) {
-    out << c.toString();
+    out << c.toString(/* useColor */ true);
     return out;
   }
 
@@ -31,8 +32,11 @@ class Card {
   bool operator==(const Card& other) const;
 
  private:
+  size_t computeId() const;
+
   Rank rank_;
   Suit suit_;
+  size_t id_;
 };
 
 namespace std {

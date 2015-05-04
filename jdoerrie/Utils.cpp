@@ -77,91 +77,47 @@ Suit Utils::toSuit(char c) {
 }
 
 char Utils::toChar(Rank rank) {
-  switch(rank) {
-    case Rank::TWO:
-      return '2';
-
-    case Rank::THREE:
-      return '3';
-
-    case Rank::FOUR:
-      return '4';
-
-    case Rank::FIVE:
-      return '5';
-
-    case Rank::SIX:
-      return '6';
-
-    case Rank::SEVEN:
-      return '7';
-
-    case Rank::EIGHT:
-      return '8';
-
-    case Rank::NINE:
-      return '9';
-
-    case Rank::TEN:
-      return 'T';
-
-    case Rank::JACK:
-      return 'J';
-
-    case Rank::QUEEN:
-      return 'Q';
-
-    case Rank::KING:
-      return 'K';
-
-    case Rank::ACE:
-      return 'A';
-
-    default:
-      return '-';
-  }
+  const char ranks[] = "--23456789TJQKA";
+  return ranks[static_cast<size_t>(rank)];
 }
 
 char Utils::toChar(Suit suit) {
-  switch(suit) {
-    case Suit::CLUBS:
-      return 'c';
-
-    case Suit::DIAMONDS:
-      return 'd';
-
-    case Suit::HEARTS:
-      return 'h';
-
-    case Suit::SPADES:
-      return 's';
-
-    default:
-      return '-';
-  }
+  const char suits[] = "-cdhs";
+  return suits[static_cast<size_t>(suit)];
 }
 
+string Utils::toString(Category category) {
+  const string categories[] = {
+    "Invalid",
+    "High Card",
+    "Pair",
+    "Two Pair",
+    "Three of a Kind",
+    "Straight",
+    "Flush",
+    "Full House",
+    "Four of a Kind",
+    "Straight Flush"
+  };
+
+  return categories[static_cast<size_t>(category)];
+}
+
+
 string Utils::getBashColor(Suit suit) {
-  switch(suit) {
-    case Suit::CLUBS:
-      return "\e[1;32m";
+  const string bashColors[] = {
+    "\e[0m",
+    "\e[1;32m", // Clubs    -> Bold Green
+    "\e[1;34m", // Diamonds -> Bold Blue
+    "\e[1;31m", // Hearts   -> Bold Red
+    "\e[1;37m"  // Spades   -> Bold White
+  };
 
-    case Suit::DIAMONDS:
-      return "\e[1;34m";
-
-    case Suit::HEARTS:
-      return "\e[1;31m";
-
-    case Suit::SPADES:
-      return "\e[1;37m";
-
-    default:
-      return "\e[0m";
-  }
+  return bashColors[static_cast<size_t>(suit)];
 }
 
 string Utils::colorEquity(const Equity& equity) {
-  static vector<string> gradient = {
+  const vector<string> gradient = {
     "\e[38;5;196m",
     "\e[38;5;202m",
     "\e[38;5;208m",

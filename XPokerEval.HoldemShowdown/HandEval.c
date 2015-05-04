@@ -1,13 +1,22 @@
-/* HandEval.c           by Steve Brecher    version 14Sep02.0 */
+/* HandEval.c           by Steve Brecher    version 26Jun10.0 */
 
 #include "HandEval.h"
 
-#define kBotRankShift   (16)
-#define kTopRankShift   (kBotRankShift+4)
-#define kValueShift     (kTopRankShift+4)
+Hand_T emptyHand = {0};
 
-#define Value(a)        ((Mask_T)(a) << kValueShift)
-#define kAce            (14)
+#define CARD_WIDTH (4)
+#define BOT_CARDS_MASK(n)   ((1<<(n*CARD_WIDTH))-1)
+#define CARD_SHIFT(rank,n)  ((rank)<<((n)*CARD_WIDTH))
+#define SHIFT4(rank)        (CARD_SHIFT((rank),4))
+#define SHIFT3(rank)        (CARD_SHIFT((rank),3))
+#define SHIFT2(rank)        (CARD_SHIFT((rank),2))
+#define SHIFT1(rank)        (CARD_SHIFT((rank),1))
+#define TOP_CARD(mask)      (SHIFT4(hiRank[(mask)]))
+#define SECOND_CARD(mask)   (SHIFT3(hiRank[(mask)]))
+#define THIRD_CARD(mask)    (SHIFT2(hiRank[(mask)]))
+#define MASK(rank)          (1<<(rank))
+
+#define Value(a)        ((Eval_T)(a) << RESULT_VALUE_SHIFT)
 
 #if d_flop_game
 #define with(kickers) | (kickers)
@@ -21,23 +30,14 @@ typedef int	Mask_T;
 
 #define kArraySize (0x1FC0 + 1)	/* all combos of up to 7 of LS 13 bits on */
 
-static Mask_T   *straightValue; /* Value(STRAIGHT) | (straight's high card rank (5..14) << kBotRankShift); 0 if no straight */
+static int      *straightValue; /* Value(STRAIGHT) | (straight's high card rank-2 (2..12) << CARD5_SHIFT); 0 if no straight */
 static int	    *nbrOfRanks;    /* count of bits set */
+static int      *hiRank;        /* 4-bit card rank of highest bit set, right justified */
+static int      *hiUpTo5Ranks;  /* 4-bit card ranks of highest (up to) 5 bits set, right-justified */
 
-static Mask_T   *hiTopRankTWO_PAIR;			/* Value(TWO_PAIR) | ((rank (2..kA) of the
-													highest bit set) << kTopRankShift) */
-static Mask_T   *hiBotRank;					/* (rank (2..kA) of the highest bit set)
-												<< kBotRankShift */
-static Mask_T   *hiRankMask;    /* all bits except highest reset */
-static Mask_T   *hi2RanksMask;  /* all bits except highest 2 reset */
-static Mask_T   *hi3RanksMask;  /* all bits except highest 3 reset */
-static Mask_T   *hi5RanksMask;  /* all bits except highest 5 reset */
-
-static Mask_T   *lo5RanksMask;  /* all bits except lowest 5 8-or-better reset;
-								   0 if not at least 5 8-or-better bits set */
-static Mask_T   *lo3RanksMask;	/* all bits except lowest 3 8-or-better reset;
+static int      *lo3_8OBRanksMask;	/* bits other than lowest 3 8-or-better reset;
 								   0 if not at least 3 8-or-better bits set */
-static Eval_T   *loEvalOrNo8Low; /* 5 bits set in LS 8 bits, or constant
+static Eval_T   *loMaskOrNo8Low; /* low-order 5 of the low-order 8 bits set, or constant
 									indicating no 8-or-better low */
 
 #if d_asian /* ranks 2-6 removed from deck; 5-card stud */
@@ -51,7 +51,7 @@ static Eval_T   *loEvalOrNo8Low; /* 5 bits set in LS 8 bits, or constant
 	if ((j += nbrOfRanks[x]) > (N-5)) {                     \
 		if (nbrOfRanks[x] >= 5)                             \
 			if (!(i = straightValue[x]))					\
-				return Value(FLUSH) | hi5RanksMask[x];		\
+				return Value(FLUSH) | hiUpTo5Ranks[x];		\
 			else                                            \
 				return (Value(STRAIGHT_FLUSH) - Value(STRAIGHT)) + i; }
 /* This macro uses the variables: Mask_T ranks, c, d, h, s */
@@ -62,32 +62,32 @@ static Eval_T   *loEvalOrNo8Low; /* 5 bits set in LS 8 bits, or constant
     mFlushOrStraightFlush(h,N) else                         \
 	    /* total cards in other suits <= N-5; spade flush:*/ \
         if (!(i = straightValue[s]))						\
-            return Value(FLUSH) | hi5RanksMask[s];			\
+            return Value(FLUSH) | hiUpTo5Ranks[s];			\
         else                                                \
             return (Value(STRAIGHT_FLUSH) - Value(STRAIGHT)) + i; \
     if ((i = straightValue[ranks]) != 0)					\
         return i;
 
-#define hand0 ((int)hand & 0x1FFF)
-#define hand1 (((int)hand >> 13) & 0x1FFF)
-#define hand2 ((int)(hand >> 26) & 0x1FFF)
-#define hand3 ((int)(hand >> 39))
+#define CLUBS (hand.bySuit.clubs)
+#define DIAMONDS (hand.bySuit.diamonds)
+#define HEARTS (hand.bySuit.hearts)
+#define SPADES (hand.bySuit.spades)
 
 d_prefix Eval_T Hand_7_Eval(Hand_T hand)
 {
     Mask_T  i, j, ranks,
-			c = hand0, d = hand1, h = hand2, s = hand3;
+			c = CLUBS, d = DIAMONDS, h = HEARTS, s = SPADES;
 
     switch (nbrOfRanks[ranks = c | d | h | s]) {
 
         case 2: /* quads with trips kicker */
                 i = c & d & h & s;  /* bit for quads */
-                return Value(FOUR_OF_A_KIND) | hiBotRank[i] with(i ^ ranks);
+                return Value(FOUR_OF_A_KIND) | TOP_CARD(i) with(SECOND_CARD(i ^ ranks));
 
         case 3: /* trips and pair (full house) with non-playing pair,
                    or two trips (full house) with non-playing singleton,
                    or quads with pair and singleton */
-                /* bits for singleton, if any, and trips, if any: */
+                /* bits of singleton, if any, and trips, if any: */
                 if (nbrOfRanks[i = c ^ d ^ h ^ s] == 3) {
                     /* two trips (full house) with non-playing singleton */
                     if (nbrOfRanks[i = c & d] != 2)
@@ -95,13 +95,13 @@ d_prefix Eval_T Hand_7_Eval(Hand_T hand)
                             if (nbrOfRanks[i = c & s] != 2)
                                 if (nbrOfRanks[i = d & h] != 2)
                                     if (nbrOfRanks[i = d & s] != 2)
-                                        i = h & s;  /* bits for the trips */
-                    return Value(FULL_HOUSE) | hiBotRank[i] with(i ^ hiRankMask[i]); }
-                if ((j = c & d & h & s) != 0)   /* bit for quads */
+                                        i = h & s;  /* bits of the trips */
+                    return Value(FULL_HOUSE) | SHIFT3(hiUpTo5Ranks[i]); }
+                 if ((j = c & d & h & s) != 0)   /* bit for quads */
                     /* quads with pair and singleton */
-                    return Value(FOUR_OF_A_KIND) | hiBotRank[j] with(hiRankMask[ranks ^ j]);
+                    return Value(FOUR_OF_A_KIND) | TOP_CARD(j) with(SECOND_CARD(ranks ^ j));
                 /* trips and pair (full house) with non-playing pair */
-                return Value(FULL_HOUSE) | hiBotRank[i] with(hiRankMask[ranks ^ i]);
+                return Value(FULL_HOUSE) | TOP_CARD(i) with(SECOND_CARD(ranks ^ i));
 
         case 4: /* three pair and singleton,
                    or trips and pair (full house) and two non-playing
@@ -112,21 +112,19 @@ d_prefix Eval_T Hand_7_Eval(Hand_T hand)
                                     and singleton(s) */
                 if (nbrOfRanks[i] == 1) {   
                     /* three pair and singleton */
-                    j = ranks ^ i;      /* the three bits for the pairs */
-                    ranks = hiRankMask[j];  /* bit for the top pair */
-                    j ^= ranks;         /* bits for the two bottom pairs */
-                    return hiTopRankTWO_PAIR[ranks]
-                        | hiBotRank[j] | hiRankMask[(hiRankMask[j] ^ j) | i]; }
-                if (!(j = c & d & h & s)) {
+                    j = hiUpTo5Ranks[ranks ^ i]; /* ranks of the 3 pairs */
+                    c = j & BOT_CARDS_MASK(1); /* rank of the worst pair */
+                    return Value(TWO_PAIR) | SHIFT2(j ^ c) | THIRD_CARD(i | MASK(c)); }
+                 if (!(j = c & d & h & s)) {
                     /* trips and pair (full house) and two non-playing
                         singletons */
                     i ^= ranks;     /* bit for the pair */
                     if (!(j = (c & d) & (~i)))
                         j = (h & s) & (~i); /* bit for the trips */
-                    return Value(FULL_HOUSE) | hiBotRank[j] with(i); }
+                    return Value(FULL_HOUSE) | TOP_CARD(j) with(SECOND_CARD(i)); }
                 /* quads with singleton kicker and two
                     non-playing singletons */
-                return Value(FOUR_OF_A_KIND) | hiBotRank[j] with(hiRankMask[i]);
+                return Value(FOUR_OF_A_KIND) | TOP_CARD(j) with(SECOND_CARD(i));
 
         case 5: /* flush and/or straight,
                    or two pair and three singletons,
@@ -136,24 +134,23 @@ d_prefix Eval_T Hand_7_Eval(Hand_T hand)
                                       and singletons */
                 if (nbrOfRanks[i] != 5) {
                     /* two pair and three singletons */
-                    j = i ^ ranks;  /* the two bits for the pairs */
-                    return hiTopRankTWO_PAIR[j]
-                            | hiBotRank[hiRankMask[j] ^ j] | hiRankMask[i]; }
+                    j = i ^ ranks;  /* the two bits of the pairs */
+                    return Value(TWO_PAIR) | SHIFT3(hiUpTo5Ranks[j]) | THIRD_CARD(i); }
                 /* trips and four singletons */
                 if (!(j = c & d))
                     j = h & s;
-                return Value(THREE_OF_A_KIND) | hiBotRank[j] with(hi2RanksMask[i ^ j]);
+                return Value(THREE_OF_A_KIND) | TOP_CARD(j)
+                    with(hiUpTo5Ranks[i ^ j] & (~BOT_CARDS_MASK(2)));
 
         case 6: /* flush and/or straight,
-                   or one pair and three kickers and
-                    two nonplaying singletons */
+                   or one pair and three kickers and two nonplaying singletons */
                 mStraightAndOrFlush(7)
                 i = c ^ d ^ h ^ s; /* the bits of the five singletons */
-                return Value(PAIR) | hiBotRank[ranks ^ i] | hi3RanksMask[i];
+                return Value(PAIR) | TOP_CARD(ranks ^ i) | ((hiUpTo5Ranks[i] >> CARD_WIDTH) & (~BOT_CARDS_MASK(1)));
 
         case 7: /* flush and/or straight or no pair */
                 mStraightAndOrFlush(7)
-                return /* Value(NO_PAIR) | */ hi5RanksMask[ranks];
+                return /* Value(NO_PAIR) | */ hiUpTo5Ranks[ranks];
 
         } /* end switch */
 
@@ -162,18 +159,18 @@ d_prefix Eval_T Hand_7_Eval(Hand_T hand)
 
 // each of the following handXlo extracts the appropriate 13-bit field from hand and
 // rotates it left to position the ace in the least significant bit
-#define hand0lo ( (((int)hand & 0x1FFF) << 1) + (((int)hand ^ 0x1000) >> 12) )
-#define hand1lo ( (((int)hand >> 12) & 0x3FFE) + (((int)hand ^ (0x1000<<13)) >> 25) )
-#define hand2lo ( ((int)(hand >> 25) & 0x3FFE) + (int)((hand ^ (0x1000i64 << 26)) >> 38) )
-#define hand3lo ( ((int)(hand >> 38) & 0x3FFE) + (int)((hand ^ (0x1000i64 << 39)) >> 51) )
+#define CLUBS_LO ( ((CLUBS & 0xFFF) << 1) + (CLUBS >> 12) )
+#define DIAMONDS_LO ( ((DIAMONDS & 0xFFF) << 1) + (DIAMONDS >> 12) )
+#define HEARTS_LO ( ((HEARTS & 0xFFF) << 1) + (HEARTS >> 12) )
+#define SPADES_LO ( ((SPADES & 0xFFF) << 1) + (SPADES >> 12) )
 
 d_prefix Eval_T Hand_Razz_Eval(Hand_T hand)
 {
     Mask_T  i, j, ranks,
-			c = hand0lo,
-			d = hand1lo,
-			h = hand2lo,
-			s = hand3lo;
+			c = CLUBS_LO,
+			d = DIAMONDS_LO,
+			h = HEARTS_LO,
+			s = SPADES_LO;
 
 	switch (nbrOfRanks[ranks = c | d | h | s]) {
 
@@ -182,14 +179,14 @@ d_prefix Eval_T Hand_Razz_Eval(Hand_T hand)
 				j = i ^ ranks;		/* bit for trips */
 				// it can't matter in comparison of results from a 52-card deck,
 				// but we return the correct value per relative ranks
-				if (i > j)
-					return Value(FULL_HOUSE) | hiBotRank[i] with(j);
-				return Value(FULL_HOUSE) | hiBotRank[j] with(i);
+				if (i < j)
+					return Value(FULL_HOUSE) | TOP_CARD(i) with(SECOND_CARD(j));
+				return Value(FULL_HOUSE) | TOP_CARD(j) with(SECOND_CARD(i));
 
         case 3: /*	AAABBBC -- two pair,
                     AAAABBC -- two pair,
  					AAABBCC -- two pair w/ kicker = highest rank.
-               /* bits for singleton, if any, and trips, if any: */
+               /* bits of singleton, if any, and trips, if any: */
                 if (nbrOfRanks[i = c ^ d ^ h ^ s] == 3) {
                     /* odd number of each rank: AAABBBC -- two pair */
                     if (nbrOfRanks[i = c & d] != 2)
@@ -197,19 +194,19 @@ d_prefix Eval_T Hand_Razz_Eval(Hand_T hand)
                             if (nbrOfRanks[i = c & s] != 2)
                                 if (nbrOfRanks[i = d & h] != 2)
                                     if (nbrOfRanks[i = d & s] != 2)
-                                        i = h & s;  /* bits for the trips */
-                    return hiTopRankTWO_PAIR[i] |
-							hiBotRank[i ^ hiRankMask[i]] | (ranks ^ i); }
+                                        i = h & s;  /* bits of the trips */
+                    return Value(TWO_PAIR) | SHIFT3(hiUpTo5Ranks[i])
+							| THIRD_CARD(ranks ^ i); }
                 if ((j = c & d & h & s) != 0) {   /* bit for quads */
                     /* AAAABBC -- two pair */
-					j = ranks ^ i;				/* bits for pairs */
-                    return hiTopRankTWO_PAIR[j] |
-							hiBotRank[j ^ hiRankMask[j]] | i;
+					j = ranks ^ i;				/* bits of pairs */
+                    return Value(TWO_PAIR) | SHIFT3(hiUpTo5Ranks[j])
+							| THIRD_CARD(i);
                 }
                 /* AAABBCC -- two pair w/ kicker = highest rank */
-				i = hiRankMask[ranks];			/* kicker bit */
-				j = ranks ^ i;					/* pairs bits */
-                return hiTopRankTWO_PAIR[j] | hiBotRank[j ^ hiRankMask[j]] | i;
+                i = hiUpTo5Ranks[ranks]; /* 00KPP 20Jun10.0 */
+                j = i & (~(BOT_CARDS_MASK(2))); /* 00K00 */
+                return Value(TWO_PAIR) | SHIFT3(i ^ j) | j;
 
         case 4: /*	AABBCCD -- one pair (lowest of A, B, C),
 					AAABBCD -- one pair (A or B),
@@ -217,27 +214,31 @@ d_prefix Eval_T Hand_Razz_Eval(Hand_T hand)
 				 */
                 i = c ^ d ^ h ^ s; /* the bit(s) of the trips, if any,
                                     and singleton(s) */
-                if (nbrOfRanks[i] == 1) {   
-                    /* AABBCCD -- one pair (C with ABD) */
-					/* D's bit is in i */
-					j = hi2RanksMask[ranks ^ i] | i;	/* kickers */
-					return Value(PAIR) | hiBotRank[ranks ^ j] | j; }
+                if (nbrOfRanks[i] == 1) {   /* 26Jun10.0: */
+					/* AABBCCD -- one pair, C with ABD; D's bit is in i */
+					j = ranks ^ i;	/* ABC bits */
+					ranks = hiUpTo5Ranks[j] & 0x0000F;	/* C rank */
+					i |= j ^ (1 << (ranks));	/* ABD bits */
+					return Value(PAIR) | SHIFT4(ranks) | SHIFT1(hiUpTo5Ranks[i]); }
                 if (!(j = c & d & h & s)) {
                     /* AAABBCD -- one pair (A or B) */
                     i ^= ranks;     /* bit for B */
                     if (!(j = (c & d) & (~i)))
                         j = (h & s) & (~i); /* bit for A */
 					if (i < j)
-						return Value(PAIR) | hiBotRank[i] | (ranks ^ i);
-					return Value(PAIR) | hiBotRank[j] | (ranks ^ j); }
+						return Value(PAIR) | TOP_CARD(i) | SHIFT1(hiUpTo5Ranks[ranks ^ i]);
+                    return Value(PAIR) | TOP_CARD(j) | SHIFT1(hiUpTo5Ranks[ranks ^ j]); }
                 /* AAAABCD -- one pair (A) */
-                return Value(PAIR) | hiBotRank[j] | i;
+                return Value(PAIR) | TOP_CARD(j) | SHIFT1(hiUpTo5Ranks[i]);	// 20Jun10.0
 
-        case 5: return /* Value(NO_PAIR) | */ ranks;
+        case 5: return /* Value(NO_PAIR) | */ hiUpTo5Ranks[ranks];
 
-        case 6: return /* Value(NO_PAIR) | */ lo5RanksMask[ranks];
+        case 6: ranks ^= MASK(hiRank[ranks]);
+                return /* Value(NO_PAIR) | */ hiUpTo5Ranks[ranks];
 
-        case 7:	return /* Value(NO_PAIR) | */ lo5RanksMask[ranks];
+        case 7:	ranks ^= MASK(hiRank[ranks]);
+                ranks ^= MASK(hiRank[ranks]);
+                return /* Value(NO_PAIR) | */ hiUpTo5Ranks[ranks];
 
         } /* end switch */
 
@@ -247,33 +248,28 @@ d_prefix Eval_T Hand_Razz_Eval(Hand_T hand)
 d_prefix Eval_T Hand_6_Eval(Hand_T hand)
 {
     Mask_T  i, j, ranks,
-			c = hand0, d = hand1, h = hand2, s = hand3;
+			c = CLUBS, d = DIAMONDS, h = HEARTS, s = SPADES;
 
     switch (nbrOfRanks[ranks = c | d | h | s]) {
 
         case 2: /* quads with pair kicker,
 				   or two trips (full house) */
-				/* bits for trips, if any: */
+				/* bits of trips, if any: */
                 if (nbrOfRanks[i = c ^ d ^ h ^ s])
                     /* two trips (full house) */
-					return Value(FULL_HOUSE) | hiBotRank[i]
-							with(i ^ hiRankMask[i]);
+					return Value(FULL_HOUSE) | SHIFT3(hiUpTo5Ranks[i]);
 				/* quads with pair kicker */
                 i = c & d & h & s;  /* bit for quads */
-                return Value(FOUR_OF_A_KIND) | hiBotRank[i]
-							with(i ^ ranks);
+                return Value(FOUR_OF_A_KIND) | TOP_CARD(i)
+							with(SECOND_CARD(i ^ ranks));
 
 		case 3:	/* quads with singleton kicker and non-playing
 				    singleton,
 				   or full house with non-playing singleton,
 				   or two pair with non-playing pair */
-				if (!(c ^ d ^ h ^ s)) {
+				if (!(c ^ d ^ h ^ s))
 					/* no trips or singletons:  three pair */
-					i = hiRankMask[ranks];	/* bit for the top pair */
-					ranks ^= i;				/* bits for the bottom two pairs */
-					j = hiRankMask[ranks];	/* bit for the middle pair */
-					return hiTopRankTWO_PAIR[i]
-						| hiBotRank[j] | (ranks ^ j); }
+                    return Value(TWO_PAIR) | SHIFT2(hiUpTo5Ranks[ranks]);
 				if ((i = c & d & h & s) == 0) {
 					/* full house with singleton */
 					if (!(i = c & d & h))
@@ -282,35 +278,34 @@ d_prefix Eval_T Hand_6_Eval(Hand_T hand)
 								i = d & h & s; /* bit of trips */
 					j = c ^ d ^ h ^ s; /* the bits of the trips
 										  and singleton */
-					return Value(FULL_HOUSE) | hiBotRank[i]
-							with(j ^ ranks); }
+					return Value(FULL_HOUSE) | TOP_CARD(i)
+							with(SECOND_CARD(j ^ ranks)); }
 				/* quads with kicker and singleton */
-				return Value(FOUR_OF_A_KIND) | hiBotRank[i]
-						with(hiRankMask[i ^ ranks]);
+				return Value(FOUR_OF_A_KIND) | TOP_CARD(i)
+						with(SECOND_CARD(i ^ ranks));
 
 		case 4:	/* trips and three singletons,
 				   or two pair and two singletons */
 				if ((i = c ^ d ^ h ^ s) != ranks) {
-					/* two pair and two singletons */
-                    j = i ^ ranks;  /* the two bits for the pairs */
-                    return hiTopRankTWO_PAIR[j]
-                            | hiBotRank[hiRankMask[j] ^ j] | hiRankMask[i]; }
+					/* two pair and two singletons; i has the singleton bits */
+                    return Value(TWO_PAIR) | SHIFT3(hiUpTo5Ranks[ranks ^ i])
+                            | THIRD_CARD(i); }
 				/* trips and three singletons */
 				if (!(i = c & d))
 					i = h & s; /* bit of trips */
-				return Value(THREE_OF_A_KIND) | hiBotRank[i]
-						with(hi2RanksMask[i ^ ranks]);
+				return Value(THREE_OF_A_KIND) | TOP_CARD(i)
+						with(SHIFT1(hiUpTo5Ranks[ranks ^ i] & (~BOT_CARDS_MASK(1))));	/* 08May10.1 */
 
 		case 5:	/* flush and/or straight,
 				   or one pair and three kickers and
 				    one non-playing singleton */
 				mStraightAndOrFlush(6)
                 i = c ^ d ^ h ^ s; /* the bits of the four singletons */
-                return Value(PAIR) | hiBotRank[ranks ^ i] | hi3RanksMask[i];
+                return Value(PAIR) | TOP_CARD(ranks ^ i) | (hiUpTo5Ranks[i] & (~BOT_CARDS_MASK(1)));
 
 		case 6:	/* flush and/or straight or no pair */
                 mStraightAndOrFlush(6)
-                return /* Value(NO_PAIR) | */ hi5RanksMask[ranks];
+                return /* Value(NO_PAIR) | */ hiUpTo5Ranks[ranks];
 
         } /* end switch */
 
@@ -325,7 +320,7 @@ d_prefix Eval_T Hand_5_Eval(Hand_T hand)
 #endif
 {
     Mask_T  i, j, ranks,
-			c = hand0, d = hand1, h = hand2, s = hand3;
+			c = CLUBS, d = DIAMONDS, h = HEARTS, s = SPADES;
 
 	switch (nbrOfRanks[ranks = c | d | h | s]) {
 
@@ -333,35 +328,32 @@ d_prefix Eval_T Hand_5_Eval(Hand_T hand)
                 i = c & d;				/* any two suits */
                 if (!(i & h & s)) {     /* no bit common to all suits */
                     i = c ^ d ^ h ^ s;  /* trips bit */
-                    return Value(FULL_HOUSE) | hiBotRank[i] with(i ^ ranks); }
+                    return Value(FULL_HOUSE) | TOP_CARD(i) with(SECOND_CARD(i ^ ranks)); }
                 else
                     /* the quads bit must be present in each suit mask,
                        but the kicker bit in no more than one; so we need
                        only AND any two suit masks to get the quad bit: */
-                    return Value(FOUR_OF_A_KIND) | hiBotRank[i] with(i ^ ranks);
+                    return Value(FOUR_OF_A_KIND) | TOP_CARD(i) with(SECOND_CARD(i ^ ranks));
 
         case 3: /* trips and two kickers,
                    or two pair and kicker */
                 if ((i = c ^ d ^ h ^ s) == ranks) {
                     /* trips and two kickers */
-                    if ((i = c & d) != 0)
-                        return Value(THREE_OF_A_KIND) | hiBotRank[i] with(i ^ ranks);
-                    if ((i = c & h) != 0)
-                        return Value(THREE_OF_A_KIND) | hiBotRank[i] with(i ^ ranks);
-                    i = d & h;
-                    return Value(THREE_OF_A_KIND) | hiBotRank[i]
-                        with(i ^ ranks); }
+                    if ((i = c & d) == 0)
+                    	if ((i = c & h) == 0)
+                    		i = d & h;
+                    return Value(THREE_OF_A_KIND) | TOP_CARD(i) with(SHIFT2(hiUpTo5Ranks[i ^ ranks])); }	// 20Jun10.0
                 /* two pair and kicker; i has kicker bit */
                 j = i ^ ranks;      /* j has pairs bits */
-                return hiTopRankTWO_PAIR[j] | hiBotRank[j ^ hiRankMask[j]] | i;
+                return Value(TWO_PAIR) | SHIFT3(hiUpTo5Ranks[j]) | THIRD_CARD(i);
 
         case 4: /* pair and three kickers */
                 i = c ^ d ^ h ^ s; /* kicker bits */
-                return Value(PAIR) | hiBotRank[ranks ^ i] | i;
+				return Value(PAIR) | TOP_CARD(ranks ^ i) | SHIFT1(hiUpTo5Ranks[i]);	/* 08May10.0 */
 
         case 5: /* flush and/or straight, or no pair */
 				if (!(i = straightValue[ranks]))
-					i = ranks;
+					i = hiUpTo5Ranks[i];
 				if (c != 0) {			/* if any clubs... */
 					if (c != ranks)		/*   if no club flush... */
 						return i; }		/*      return straight or no pair value */
@@ -375,9 +367,9 @@ d_prefix Eval_T Hand_5_Eval(Hand_T hand)
 								return i; }
 					/*	else s == ranks: spade flush */
 				/* There is a flush */
-				if (i == ranks)
+				if (i < Value(STRAIGHT))
 					/* no straight */
-					return Value(FLUSH) | ranks;
+					return Value(FLUSH) | i;
 				else
 					return (Value(STRAIGHT_FLUSH) - Value(STRAIGHT)) + i;
 	}
@@ -385,15 +377,30 @@ d_prefix Eval_T Hand_5_Eval(Hand_T hand)
     return 0; /* never reached, but avoids compiler warning */
 }
 
+d_prefix Eval_T Hand_2_to_7_Eval(Hand_T hand)
+{
+
+#define WHEEL_EVAL			0x04030000
+#define WHEEL_FLUSH_EVAL	0x08030000
+#define NO_PAIR_ACE_HIGH	0x000C3210
+
+	Eval_T result = Hand_5_Eval(hand);
+	if (result == WHEEL_EVAL)
+		return NO_PAIR_ACE_HIGH;
+	if (result == WHEEL_FLUSH_EVAL)
+		return Value(FLUSH) | NO_PAIR_ACE_HIGH;
+	return result;
+}
+
 #if !d_asian
 
 d_prefix Eval_T Hand_5_Ato5Lo_Eval(Hand_T hand)
 {
     Mask_T  i, j, ranks,
-			c = hand0lo,
-			d = hand1lo,
-			h = hand2lo,
-			s = hand3lo;
+			c = CLUBS_LO,
+			d = DIAMONDS_LO,
+			h = HEARTS_LO,
+			s = SPADES_LO;
 
 	switch (nbrOfRanks[ranks = c | d | h | s]) {
 
@@ -401,43 +408,40 @@ d_prefix Eval_T Hand_5_Ato5Lo_Eval(Hand_T hand)
                 i = c & d;				/* any two suits */
                 if (!(i & h & s)) {     /* no bit common to all suits */
                     i = c ^ d ^ h ^ s;  /* trips bit */
-                    return Value(FULL_HOUSE) | hiBotRank[i] with(i ^ ranks); }
+                    return Value(FULL_HOUSE) | TOP_CARD(i) with(SECOND_CARD(i ^ ranks)); }
                 else
                     /* the quads bit must be present in each suit mask,
                        but the kicker bit in no more than one; so we need
                        only AND any two suit masks to get the quad bit: */
-                    return Value(FOUR_OF_A_KIND) | hiBotRank[i] with(i ^ ranks);
+                    return Value(FOUR_OF_A_KIND) | TOP_CARD(i) with(SECOND_CARD(i ^ ranks));
 
         case 3: /* trips and two kickers,
                    or two pair and kicker */
                 if ((i = c ^ d ^ h ^ s) == ranks) {
                     /* trips and two kickers */
-                    if ((i = c & d) != 0)
-                        return Value(THREE_OF_A_KIND) | hiBotRank[i] with(i ^ ranks);
-                    if ((i = c & h) != 0)
-                        return Value(THREE_OF_A_KIND) | hiBotRank[i] with(i ^ ranks);
-                    i = d & h;
-                    return Value(THREE_OF_A_KIND) | hiBotRank[i]
-                        with(i ^ ranks); }
+                    if ((i = c & d) == 0)
+                    	if ((i = c & h) == 0)
+                    		i = d & h;
+                    return Value(THREE_OF_A_KIND) | TOP_CARD(i) with(SHIFT2(hiUpTo5Ranks[i ^ ranks])); } // 20Jun10.0
                 /* two pair and kicker; i has kicker bit */
                 j = i ^ ranks;      /* j has pairs bits */
-                return hiTopRankTWO_PAIR[j] | hiBotRank[j ^ hiRankMask[j]] | i;
+                return Value(TWO_PAIR) | SHIFT3(hiUpTo5Ranks[j]) | THIRD_CARD(i);
 
         case 4: /* pair and three kickers */
                 i = c ^ d ^ h ^ s; /* kicker bits */
-                return Value(PAIR) | hiBotRank[ranks ^ i] | i;
+                return Value(PAIR) | TOP_CARD(ranks ^ i) | SHIFT1(hiUpTo5Ranks[i]);
 
         case 5: /* no pair */
-				return ranks;
+				return hiUpTo5Ranks[ranks];
 	}
 
     return 0; /* never reached, but avoids compiler warning */
 }
 #endif
 
-d_prefix int Hi_Card_Mask(short mask)
+d_prefix int Hi_Card_Rank(short mask)
 {
-    return hiRankMask[mask];
+    return hiRank[mask];
 }
 
 d_prefix int Number_Of_Ranks(short mask)
@@ -445,40 +449,61 @@ d_prefix int Number_Of_Ranks(short mask)
     return nbrOfRanks[mask];
 }
 
-d_prefix int Rank_Of_Hi_Card(short mask)
-{
-    return hiBotRank[mask] >> kBotRankShift;
-}
-
+/*
+ * Sets rank and suit of the first (usually only) card in hand
+ * looking in order of clubs, diamonds, hearts, spades and from
+ * low to high rank within each. If hand is empty *rank and
+ * *suit are unchanged.
+ */
 d_prefix void Decode(Hand_T hand, int *rank, int *suit)
 {
-    int m;
+    int m, r, s;
 
-    for (*suit = 0; *suit < 4; ++*suit)
-        if ((m = (int)(hand >> (*suit*13)) & 0x1FFF) != 0)
-            for (*rank = 2; *rank <= 14; ++*rank, m >>= 1)
-                if (m & 1)
-                    return;
+    s = (int)kClubs;
+    if (!(m = CLUBS)) {
+        s = (int)kDiamonds;
+        if (!(m = DIAMONDS)) {
+            s = (int)kHearts;
+            if (!(m = HEARTS)) {
+                s = (int)kSpades;
+                m = SPADES;
+            }
+        }
+    }
+    for (r = 2; r <= 14; ++r, m >>= 1)
+        if (m & 1) {
+            *rank = r;
+            *suit = s;
+            break;
+        }
+    return;
 }
 
 #if !d_asian
 d_prefix Eval_T Hand_8Low_Eval(Hand_T hand) {
 
-	return loEvalOrNo8Low[hand0lo | hand1lo | hand2lo | hand3lo];
+	int result = loMaskOrNo8Low[CLUBS_LO | DIAMONDS_LO | HEARTS_LO | SPADES_LO];
+    if (result != NO_8_LOW)
+        return hiUpTo5Ranks[result];
+    return result;
 }
 
 d_prefix Eval_T Ranks_8Low_Eval(int ranks) {
 
-	return loEvalOrNo8Low[ranks];
+	int result = loMaskOrNo8Low[ranks];
+    if (result != NO_8_LOW)
+        return hiUpTo5Ranks[result];
+    return result;
 }
 
-d_prefix Eval_T Omaha8_Low_Eval(int twoHoleRanks, int boardRanks) {
-	return loEvalOrNo8Low[lo3RanksMask[boardRanks & ~twoHoleRanks] | twoHoleRanks];
+d_prefix Eval_T Omaha8_Low_Eval(int twoHolesMask, int boardMask) {
+
+    int result = loMaskOrNo8Low[lo3_8OBRanksMask[boardMask & ~twoHolesMask] | twoHolesMask];
+    if (result != NO_8_LOW)
+        return hiUpTo5Ranks[result];
+    return result;
 }
 
-d_prefix Eval_T No8LowValue(void) {
-	return k_No8Low;
-}
 #endif
 
 /************ Initialization ***********************/
@@ -494,92 +519,80 @@ static void SetStraight(int ts)
 			if (!straightValue[es])
 				if (ts == d_wheel)
 #if d_asian
-                    straightValue[es] = Value(STRAIGHT) + (10 << kBotRankShift);
+                    straightValue[es] = Value(STRAIGHT) + SHIFT4(10-2);
 #else
-					straightValue[es] = Value(STRAIGHT) + (5 << kBotRankShift); 
+					straightValue[es] = Value(STRAIGHT) + SHIFT4(5-2); 
 #endif
 				else
-					straightValue[es] = Value(STRAIGHT) + hiBotRank[ts];
+					straightValue[es] = Value(STRAIGHT) + TOP_CARD(ts);
 		}
 }
 
+#define kAce            (12)
+
 #if d_asian
-d_prefix Boolean Init_Asian_Eval(void)
+d_prefix int Init_Asian_Eval(void)
 #else
-d_prefix Boolean Init_Hand_Eval(void)
+d_prefix int Init_Hand_Eval(void)
 #endif
 {
-  static	Boolean initted = false;
+  static	int initted = 0;
 
-    int     mask, bitCount;
+    int     mask, bitCount, ranks;
     Mask_T  shiftReg, i;
 	Mask_T	value;
 
 	if (initted)
-		return true;
+		return 1;
 
 #define mAllocate(type, array)                                  \
     array = (type *)(d_ram_alloc(kArraySize, sizeof(*array)));  \
-    if (!array) return false
+    if (!array) return 0;
 
     mAllocate(Mask_T, straightValue);
     mAllocate(int, nbrOfRanks);
-    mAllocate(Mask_T, hiTopRankTWO_PAIR);
-    mAllocate(Mask_T, hiBotRank);
-    mAllocate(Mask_T, hiRankMask);
-    mAllocate(Mask_T, hi2RanksMask);
-    mAllocate(Mask_T, hi3RanksMask);
-    mAllocate(Mask_T, hi5RanksMask);
-    mAllocate(Mask_T, lo5RanksMask);
-	mAllocate(Mask_T, lo3RanksMask);
-	mAllocate(Eval_T, loEvalOrNo8Low);
+    mAllocate(Mask_T, hiRank);
+    mAllocate(Mask_T, hiUpTo5Ranks);
+	mAllocate(Mask_T, lo3_8OBRanksMask);
+	mAllocate(Eval_T, loMaskOrNo8Low);
+    loMaskOrNo8Low[0] = NO_8_LOW; /* other elements set in following loop */
 
     for (mask = 1; mask < kArraySize; ++mask) {
-        bitCount = 0;
+        bitCount = ranks = 0;
         shiftReg = mask;
-        for (i = kAce - 1; i > 0; --i, shiftReg <<= 1)
-            if (shiftReg & 0x1000)
-                switch (++bitCount) {
-                    case 1: hiTopRankTWO_PAIR[mask] = Value(TWO_PAIR) 
-                                                | ((i + 1) << kTopRankShift);
-							hiBotRank[mask] = (i + 1) << kBotRankShift;
-                            hiRankMask[mask] = 0x1000 >> (kAce - 1 - i);
-                            break;
-                    case 2: hi2RanksMask[mask] = (shiftReg & 0x03FFF000)
-                                                    >> (kAce - 1 - i);
-                            break;
-                    case 3: hi3RanksMask[mask] = (shiftReg & 0x03FFF000)
-                                                    >> (kAce - 1 - i);
-                            break;
-                    case 5: hi5RanksMask[mask] = (shiftReg & 0x03FFF000)
-                                                    >> (kAce - 1 - i);
-				}
+        for (i = kAce; i >= 0; --i, shiftReg <<= 1)
+            if (shiftReg & 0x1000) {
+                if (++bitCount <= 5) {
+                    ranks <<= CARD_WIDTH;
+                    ranks += i;
+                    if (bitCount == 1)
+                        hiRank[mask] = i;
+                }
+            }
+        hiUpTo5Ranks[mask] = ranks;
         nbrOfRanks[mask] = bitCount;
 
-        bitCount = 0;
-        /* rotate the 13 bits left to get ace into LS bit */
-        /* we don't need to mask the low 13 bits of the result */
-        /* as we're going to look only at the low order 8 bits */
-        shiftReg = (mask << 1) + ((mask ^ 0x1000) >> 12);
-        value = 0;
+		loMaskOrNo8Low[mask] = NO_8_LOW;
+        bitCount = value = 0;
+		shiftReg = mask;
+		/* For the purpose of this loop, Ace is low; it's in the LS bit */
         for (i = 0; i < 8; ++i, shiftReg >>= 1)
 	        if ((shiftReg & 1) != 0) {
 		        value |= (1 << i); /* undo previous shifts, copy bit */
-		        if (++bitCount == 5) {
-			        lo5RanksMask[mask] = value;
-			        break;
-		        }
-		        if (bitCount == 3)
-			        lo3RanksMask[mask] = value;
+		        if (++bitCount == 3)
+			        lo3_8OBRanksMask[mask] = value;
+                if (bitCount == 5) {
+                    loMaskOrNo8Low[mask] = value;
+					break;
+				}
 	        }
-        loEvalOrNo8Low[mask] = (bitCount == 5) ? value : k_No8Low;
-		  }
+        }
 
     for (mask = 0x1F00/*A..T*/; mask >= 0x001F/*6..2*/; mask >>= 1)
         SetStraight(mask);
     SetStraight(d_wheel);       /* A,5..2 (A,T..7 for Asian stud) */
 
-	initted = true;
+	initted = 1;
 
-  return true;
+  return 1;
 }

@@ -8,21 +8,29 @@ class Card;
 
 class Hand {
  public:
+  static const size_t MAX_ID;
+  static const size_t INVALID_ID;
+
   Hand(const std::string& str = "");
-  Hand(std::vector<Card> cards);
+  Hand(const std::vector<Card>& cards);
   Hand(size_t id);
 
   const std::vector<Card>& getCards() const;
   size_t getId() const;
   static std::vector<Hand> enumerateAllHands(GameType gameType);
 
+  static std::vector<Hand> enumerateAllBoards(
+    const Hand& initialBoard = {},
+    const Hand& deadCards = {}
+  );
+
   bool isValid(size_t numCards = 0) const;
   bool addCard(const Card& card);
   bool containsCard(const Card& card) const;
 
-  std::string toString(bool allRanksFirst = false) const;
+  std::string toString(bool allRanksFirst = false, bool useColor = false) const;
   friend std::ostream& operator<<(std::ostream& out, const Hand& hand) {
-    out << hand.toString();
+    out << hand.toString(/* allRanksFirst */ false, /* useColor */ true);
     return out;
   }
 
@@ -30,14 +38,16 @@ class Hand {
   bool operator==(const Hand& other) const;
 
  private:
+  size_t id_;
   std::vector<Card> cards_;
 
   void normalize();
 
-  static void enumerateAllHandsHelper(
+  static void enumerateAllHelper(
       std::vector<Hand>& hands,
       const Hand& currHand,
-      size_t numCards);
+      size_t numCards,
+      const Hand& deadCards = {});
 };
 
 namespace std {

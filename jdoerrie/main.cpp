@@ -50,13 +50,13 @@ int main(int argc, char *argv[]) {
   }
 
   if (mode.empty() || game.empty() || handsStr.empty()) {
-    cout << argv[0] << " --mode=[eval, card, hand] --game=[holdem, omaha] "
-      "--hands [--board, --dead]\n";
+    cout << argv[0] << " --mode=[eval, card, hand, classes] "
+    "--game=[holdem, omaha, omaha5] --hands [--board, --dead]\n";
     return 1;
   }
 
   vector<string> players;
-  boost::split(players, handsStr, boost::is_any_of(";"));
+  boost::split(players, handsStr, boost::is_any_of(":"));
   vector<Hand> hands;
   for (const auto& player: players) {
     hands.emplace_back(player);
@@ -71,7 +71,9 @@ int main(int argc, char *argv[]) {
   vector<Range> ranges(players.size());
   for (size_t i = 0; i < players.size(); ++i) {
     cout << "Player " << i + 1 << ": " << players[i];
-    cout << "\t(" << ranges[i].fromRegEx(players[i], gameType) << " combos)" << endl;
+    int combs = ranges[i].fromRegEx(players[i], gameType);
+    ranges[i] = ranges[i].filter(board).filter(dead);
+    cout << "\t(" << ranges[i].getHands().size() << "/" << combs << " combos)\n";
   }
 
   cout << "Board: " << board << endl;
@@ -85,6 +87,11 @@ int main(int argc, char *argv[]) {
     pokerGame.printNextCards();
   } else if (mode == "hand") {
     pokerGame.printRangeBreakdown();
+  } else if (mode == "classes") {
+    cout << "Value Hands:\n";
+    pokerGame.printCategories();
+    cout << "\nDraws:\n";
+    pokerGame.printDraws(0.05);
   }
 
   return 0;

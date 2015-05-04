@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Category.h"
 #include "GameType.h"
 #include "Hand.h"
 #include "Range.h"
@@ -20,6 +21,8 @@ class PokerGame {
   void printEquities() const;
   void printNextCards() const;
   void printRangeBreakdown() const;
+  void printCategories() const;
+  void printDraws(double minProb = 0.01) const;
 
   GameType getGameType() const;
   const std::vector<Range>& getRanges() const;
