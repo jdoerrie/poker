@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
   }
 
   vector<string> players;
-  boost::split(players, handsStr, boost::is_any_of(";"));
+  boost::split(players, handsStr, boost::is_any_of(":"));
   vector<Hand> hands;
   for (const auto& player: players) {
     hands.emplace_back(player);
