@@ -1,6 +1,7 @@
 #include "Card.h"
 #include "Hand.h"
 #include "PokerGame.h"
+#include "Range.h"
 #include "Utils.h"
 
 #include <boost/algorithm/string.hpp>

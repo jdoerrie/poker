@@ -1,8 +1,9 @@
 #pragma once
 
-#include "GameType.h"
 #include <vector>
 #include <string>
+
+enum class GameType;
 
 class Hand;
 

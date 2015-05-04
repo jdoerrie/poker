@@ -1,9 +1,12 @@
 #include "PokerGame.h"
 
+#include "Category.h"
 #include "Card.h"
 #include "Evaluator.h"
 #include "Equity.h"
+#include "Range.h"
 #include "Utils.h"
+
 #include <algorithm>
 #include <iostream>
 #include <map>

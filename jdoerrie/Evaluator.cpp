@@ -2,6 +2,7 @@
 
 #include "Card.h"
 #include "Equity.h"
+#include "GameType.h"
 #include "Hand.h"
 #include "Range.h"
 

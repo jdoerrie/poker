@@ -1,5 +1,12 @@
 #include "Utils.h"
 
+#include "Equity.h"
+#include "GameType.h"
+#include "Rank.h"
+#include "Suit.h"
+
+#include <array>
+
 using namespace std;
 
 Rank Utils::toRank(char c) {
@@ -87,7 +94,7 @@ char Utils::toChar(Suit suit) {
 }
 
 string Utils::toString(Category category) {
-  const string categories[] = {
+  const array<string, 10> categories = {{
     "Invalid",
     "High Card",
     "Pair",
@@ -98,26 +105,26 @@ string Utils::toString(Category category) {
     "Full House",
     "Four of a Kind",
     "Straight Flush"
-  };
+  }};
 
   return categories[static_cast<size_t>(category)];
 }
 
 
 string Utils::getBashColor(Suit suit) {
-  const string bashColors[] = {
+  const array<string, 5> bashColors = {{
     "\e[0m",
     "\e[1;32m", // Clubs    -> Bold Green
     "\e[1;34m", // Diamonds -> Bold Blue
     "\e[1;31m", // Hearts   -> Bold Red
     "\e[1;37m"  // Spades   -> Bold White
-  };
+  }};
 
   return bashColors[static_cast<size_t>(suit)];
 }
 
 string Utils::colorEquity(const Equity& equity) {
-  const vector<string> gradient = {
+  const array<string, 11> gradient = {{
     "\e[38;5;196m",
     "\e[38;5;202m",
     "\e[38;5;208m",
@@ -129,7 +136,7 @@ string Utils::colorEquity(const Equity& equity) {
     "\e[38;5;118m",
     "\e[38;5;82m",
     "\e[38;5;46m"
-  };
+  }};
 
   size_t idx = static_cast<size_t>(equity.toDouble() * gradient.size());
   if (idx == gradient.size()) {

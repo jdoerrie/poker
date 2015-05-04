@@ -1,9 +1,7 @@
 #pragma once
 
-#include "GameType.h"
 #include <array>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 /**
@@ -22,6 +20,8 @@
  * Kc = 45  Kd = 46  Kh = 47  Ks = 48
  * Ac = 49  Ad = 50  Ah = 51  As = 52
  */
+
+enum class GameType;
 
 class Hand;
 class Equity;

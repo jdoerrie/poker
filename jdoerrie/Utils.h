@@ -1,12 +1,13 @@
 #pragma once
 
-#include "Category.h"
-#include "Equity.h"
-#include "GameType.h"
-#include "Rank.h"
-#include "Suit.h"
-#include <vector>
 #include <string>
+
+enum class Category;
+enum class GameType;
+enum class Rank;
+enum class Suit;
+
+class Equity;
 
 class Utils {
  public:

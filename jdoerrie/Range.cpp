@@ -2,6 +2,7 @@
 
 #include "Card.h"
 #include "Evaluator.h"
+#include "GameType.h"
 #include "Hand.h"
 #include "Utils.h"
 

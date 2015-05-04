@@ -1,7 +1,9 @@
 #include "Hand.h"
 
 #include "Card.h"
+#include "GameType.h"
 #include "Utils.h"
+
 #include <algorithm>
 
 using namespace std;

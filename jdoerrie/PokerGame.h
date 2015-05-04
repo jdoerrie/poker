@@ -1,13 +1,12 @@
 #pragma once
 
-#include "Category.h"
 #include "GameType.h"
 #include "Hand.h"
-#include "Range.h"
-#include "Utils.h"
+
 #include <vector>
 
 class Evaluator;
+class Range;
 
 class PokerGame {
  public:
