@@ -113,11 +113,11 @@ string Utils::toString(Category category) {
 
 string Utils::getBashColor(Suit suit) {
   const array<string, 5> bashColors = {{
-    "\e[0m",
-    "\e[1;32m", // Clubs    -> Bold Green
-    "\e[1;34m", // Diamonds -> Bold Blue
-    "\e[1;31m", // Hearts   -> Bold Red
-    "\e[1;37m"  // Spades   -> Bold White
+    "\x1B[0m",
+    "\x1B[1;32m", // Clubs    -> Bold Green
+    "\x1B[1;34m", // Diamonds -> Bold Blue
+    "\x1B[1;31m", // Hearts   -> Bold Red
+    "\x1B[1;37m"  // Spades   -> Bold White
   }};
 
   return bashColors[static_cast<size_t>(suit)];
@@ -125,17 +125,17 @@ string Utils::getBashColor(Suit suit) {
 
 string Utils::colorEquity(const Equity& equity) {
   const array<string, 11> gradient = {{
-    "\e[38;5;196m",
-    "\e[38;5;202m",
-    "\e[38;5;208m",
-    "\e[38;5;214m",
-    "\e[38;5;220m",
-    "\e[38;5;226m",
-    "\e[38;5;190m",
-    "\e[38;5;154m",
-    "\e[38;5;118m",
-    "\e[38;5;82m",
-    "\e[38;5;46m"
+    "\x1B[38;5;196m",
+    "\x1B[38;5;202m",
+    "\x1B[38;5;208m",
+    "\x1B[38;5;214m",
+    "\x1B[38;5;220m",
+    "\x1B[38;5;226m",
+    "\x1B[38;5;190m",
+    "\x1B[38;5;154m",
+    "\x1B[38;5;118m",
+    "\x1B[38;5;82m",
+    "\x1B[38;5;46m"
   }};
 
   size_t idx = static_cast<size_t>(equity.toDouble() * gradient.size());
@@ -143,7 +143,7 @@ string Utils::colorEquity(const Equity& equity) {
     --idx;
   }
 
-  return gradient[idx] + to_string(equity.toDouble()) + "\e[0m";
+  return gradient[idx] + to_string(equity.toDouble()) + "\x1B[0m";
 }
 
 int Utils::getNumCards(GameType gameType) {
