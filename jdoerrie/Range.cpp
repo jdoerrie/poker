@@ -12,8 +12,8 @@
 using namespace std;
 using namespace boost;
 
-Range::Range(const string& description) : description_(description) {};
-Range::Range(const vector<Hand>& hands) : hands_(hands) {};
+Range::Range(const string& description) : description_(description) {}
+Range::Range(const vector<Hand>& hands) : hands_(hands) {}
 
 size_t Range::fromRegEx(const string& str, GameType gameType) {
   gameType_ = gameType;
