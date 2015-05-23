@@ -114,10 +114,10 @@ string Utils::toString(Category category) {
 string Utils::getBashColor(Suit suit) {
   const array<string, 5> bashColors = {{
     "\x1B[0m",
-    "\x1B[1;32m", // Clubs    -> Bold Green
-    "\x1B[1;34m", // Diamonds -> Bold Blue
-    "\x1B[1;31m", // Hearts   -> Bold Red
-    "\x1B[1;37m"  // Spades   -> Bold White
+    "\x1B[0;32m", // Clubs    -> Green
+    "\x1B[0;34m", // Diamonds -> Blue
+    "\x1B[0;31m", // Hearts   -> Red
+    "\x1B[0;37m"  // Spades   -> White
   }};
 
   return bashColors[static_cast<size_t>(suit)];
