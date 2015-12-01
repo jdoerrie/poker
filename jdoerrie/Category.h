@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 enum class Category {
   Invalid         = 0,
   High_Card       = 1,
@@ -13,9 +15,4 @@ enum class Category {
   Straight_Flush  = 9,
 };
 
-// template<>
-// struct std::hash<Category> {
-//   size_t operator()(const Category& category) const {
-//     return static_cast<size_t>(category);
-//   }
-// };
+std::string toString(Category category);

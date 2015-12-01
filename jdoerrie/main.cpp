@@ -2,7 +2,6 @@
 #include "Hand.h"
 #include "PokerGame.h"
 #include "Range.h"
-#include "Utils.h"
 
 #include <boost/algorithm/string.hpp>
 #include <getopt.h>
@@ -10,23 +9,23 @@
 
 using namespace std;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   ios_base::sync_with_stdio(false);
 
   string mode, game, handsStr;
   Hand board, dead;
 
   static struct option long_options[] = {
-    { "mode",  required_argument, nullptr, 'm' },
-    { "game",  required_argument, nullptr, 'g' },
-    { "hands", required_argument, nullptr, 'h' },
-    { "board", optional_argument, nullptr, 'b' },
-    { "dead",  optional_argument, nullptr, 'd' },
-    { nullptr,                 0, nullptr,  0  }
-  };
+      {"mode", required_argument, nullptr, 'm'},
+      {"game", required_argument, nullptr, 'g'},
+      {"hands", required_argument, nullptr, 'h'},
+      {"board", optional_argument, nullptr, 'b'},
+      {"dead", optional_argument, nullptr, 'd'},
+      {nullptr, 0, nullptr, 0}};
 
   int ch = 0;
-  while ((ch = getopt_long(argc, argv, "m:g:h:b:d:", long_options, nullptr)) != -1) {
+  while ((ch = getopt_long(argc, argv, "m:g:h:b:d:", long_options, nullptr)) !=
+         -1) {
     switch (ch) {
       case 'm':
         mode = optarg;
@@ -51,19 +50,20 @@ int main(int argc, char *argv[]) {
   }
 
   if (mode.empty() || game.empty() || handsStr.empty()) {
-    cout << argv[0] << " --mode=[eval, card, hand, classes] "
-    "--game=[holdem, omaha, omaha5] --hands [--board, --dead]\n";
+    cout << argv[0]
+         << " --mode=[eval, card, hand, classes] "
+            "--game=[holdem, omaha, omaha5] --hands [--board, --dead]\n";
     return 1;
   }
 
   vector<string> players;
   boost::split(players, handsStr, boost::is_any_of(":"));
   vector<Hand> hands;
-  for (const auto& player: players) {
+  for (const auto& player : players) {
     hands.emplace_back(player);
   }
 
-  GameType gameType = Utils::getGameType(game);
+  GameType gameType = getGameType(game);
   if (gameType == GameType::INVALID) {
     cerr << "ERROR: " << game << " is not a valid game" << endl;
     return 1;
@@ -74,7 +74,8 @@ int main(int argc, char *argv[]) {
     cout << "Player " << i + 1 << ": " << players[i];
     int combs = ranges[i].fromRegEx(players[i], gameType);
     ranges[i] = ranges[i].filter(board).filter(dead);
-    cout << "\t(" << ranges[i].getHands().size() << "/" << combs << " combos)\n";
+    cout << "\t(" << ranges[i].getHands().size() << "/" << combs
+         << " combos)\n";
   }
 
   cout << "Board: " << board << endl;

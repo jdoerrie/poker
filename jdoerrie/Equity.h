@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <string>
 #include <vector>
 
 class Equity {
@@ -26,3 +27,5 @@ class Equity {
   std::vector<size_t> gameResults_;
   size_t numGames_;
 };
+
+std::string colorEquity(const Equity& equity);
