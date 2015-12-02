@@ -15,11 +15,8 @@ class Equity {
   size_t getNumGames() const;
   const std::vector<size_t>& getGameResults() const;
 
-  double toDouble() const;
+  explicit operator double() const;
   void merge(const Equity& other);
-
-  bool operator<(const Equity& other) const;
-  friend std::ostream& operator<<(std::ostream& out, const Equity& eq);
 
  private:
   void addGame(size_t result);
@@ -29,3 +26,5 @@ class Equity {
 };
 
 std::string colorEquity(const Equity& equity);
+bool operator<(const Equity& lhs, const Equity& rhs);
+std::ostream& operator<<(std::ostream& out, const Equity& equity);

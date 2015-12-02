@@ -16,7 +16,7 @@ size_t Equity::getNumGames() const { return numGames_; }
 
 const vector<size_t>& Equity::getGameResults() const { return gameResults_; }
 
-double Equity::toDouble() const {
+Equity::operator double() const {
   if (numGames_ == 0) {
     return 0.0;
   }
@@ -41,10 +41,6 @@ void Equity::merge(const Equity& other) {
   numGames_ += other.numGames_;
 }
 
-bool Equity::operator<(const Equity& other) const {
-  return toDouble() < other.toDouble();
-}
-
 void Equity::addGame(size_t result) {
   if (gameResults_.size() < result + 1) {
     gameResults_.resize(result + 1);
@@ -54,30 +50,26 @@ void Equity::addGame(size_t result) {
   ++numGames_;
 }
 
-ostream& operator<<(ostream& out, const Equity& eq) {
-  out << std::fixed << eq.toDouble();
+bool operator<(const Equity& lhs, const Equity& rhs) {
+  return static_cast<double>(lhs) < static_cast<double>(rhs);
+}
+
+ostream& operator<<(ostream& out, const Equity& equity) {
+  out << std::fixed << static_cast<double>(equity);
   return out;
 }
 
 string colorEquity(const Equity& equity) {
-  static const array<string, 11> gradient = {{
-    "\x1B[38;5;196m",
-    "\x1B[38;5;202m",
-    "\x1B[38;5;208m",
-    "\x1B[38;5;214m",
-    "\x1B[38;5;220m",
-    "\x1B[38;5;226m",
-    "\x1B[38;5;190m",
-    "\x1B[38;5;154m",
-    "\x1B[38;5;118m",
-    "\x1B[38;5;82m",
-    "\x1B[38;5;46m"
-  }};
+  static const array<string, 11> gradient = {
+      {"\x1B[38;5;196m", "\x1B[38;5;202m", "\x1B[38;5;208m", "\x1B[38;5;214m",
+       "\x1B[38;5;220m", "\x1B[38;5;226m", "\x1B[38;5;190m", "\x1B[38;5;154m",
+       "\x1B[38;5;118m", "\x1B[38;5;82m", "\x1B[38;5;46m"}};
 
-  size_t idx = static_cast<size_t>(equity.toDouble() * gradient.size());
+  size_t idx =
+      static_cast<size_t>(static_cast<double>(equity) * gradient.size());
   if (idx == gradient.size()) {
     --idx;
   }
 
-  return gradient[idx] + to_string(equity.toDouble()) + "\x1B[0m";
+  return gradient[idx] + to_string(static_cast<double>(equity)) + "\x1B[0m";
 }

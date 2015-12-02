@@ -67,8 +67,11 @@ void PokerGame::printNextCards() const {
   sort(results.rbegin(), results.rend());
   cout << "Best Cards for Player 1:";
   for (size_t i = 0; i < results.size(); ++i) {
-    if (i > 0 &&
-        results[i - 1].first.toDouble() == results[i].first.toDouble()) {
+    if (
+      i > 0 &&
+        static_cast<double>(results[i - 1].first) ==
+        static_cast<double>(results[i].first)
+    ) {
       cout << ", " << results[i].second;
     } else {
       cout << endl;
@@ -102,8 +105,11 @@ void PokerGame::printRangeBreakdown() const {
   sort(results.rbegin(), results.rend());
   cout << "Best Hands for Player 1:";
   for (size_t i = 0; i < results.size(); ++i) {
-    if (i > 0 &&
-        results[i - 1].first.toDouble() == results[i].first.toDouble()) {
+    if (
+      i > 0 &&
+        static_cast<double>(results[i - 1].first) ==
+        static_cast<double>(results[i].first)
+    ) {
       cout << ", " << results[i].second;
     } else {
       cout << endl;
