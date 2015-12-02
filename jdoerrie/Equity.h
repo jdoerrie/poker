@@ -25,6 +25,7 @@ class Equity {
   size_t numGames_;
 };
 
+std::string colorEquity(double equity);
 std::string colorEquity(const Equity& equity);
 bool operator<(const Equity& lhs, const Equity& rhs);
 std::ostream& operator<<(std::ostream& out, const Equity& equity);

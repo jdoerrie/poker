@@ -59,17 +59,21 @@ ostream& operator<<(ostream& out, const Equity& equity) {
   return out;
 }
 
-string colorEquity(const Equity& equity) {
+string colorEquity(double equity) {
   static const array<string, 11> gradient = {
       {"\x1B[38;5;196m", "\x1B[38;5;202m", "\x1B[38;5;208m", "\x1B[38;5;214m",
        "\x1B[38;5;220m", "\x1B[38;5;226m", "\x1B[38;5;190m", "\x1B[38;5;154m",
        "\x1B[38;5;118m", "\x1B[38;5;82m", "\x1B[38;5;46m"}};
 
   size_t idx =
-      static_cast<size_t>(static_cast<double>(equity) * gradient.size());
+      static_cast<size_t>(equity * gradient.size());
   if (idx == gradient.size()) {
     --idx;
   }
 
-  return gradient[idx] + to_string(static_cast<double>(equity)) + "\x1B[0m";
+  return gradient[idx] + to_string(equity) + "\x1B[0m";
+}
+
+string colorEquity(const Equity& equity) {
+  return colorEquity(static_cast<double>(equity));
 }

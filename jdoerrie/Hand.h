@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -50,6 +51,29 @@ class Hand {
       size_t numCards,
       const Hand& deadCards = {});
 };
+
+template<class Container>
+void printFormatted(
+  const Container& c,
+  std::ostream& out  = std::cout,
+  const std::string& padding = "  ",
+  size_t lineLength = 80,
+  const std::string& seperator = ", "
+) {
+  out << padding;
+  size_t currLength = padding.size();
+  for (const Hand& hand: c) {
+    if (currLength + hand.toString().size() + seperator.size() > lineLength) {
+      out << std::endl << padding;
+      currLength = padding.size();
+    }
+
+    out << hand << seperator;
+    currLength += hand.toString().size() + seperator.size();
+  }
+
+  out << std::endl;
+}
 
 namespace std {
   template<>

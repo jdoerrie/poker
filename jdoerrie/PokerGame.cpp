@@ -102,22 +102,18 @@ void PokerGame::printRangeBreakdown() const {
     }
   }
 
-  sort(results.rbegin(), results.rend());
-  cout << "Best Hands for Player 1:";
-  for (size_t i = 0; i < results.size(); ++i) {
-    if (
-      i > 0 &&
-        static_cast<double>(results[i - 1].first) ==
-        static_cast<double>(results[i].first)
-    ) {
-      cout << ", " << results[i].second;
-    } else {
-      cout << endl;
-      cout << colorEquity(results[i].first) << ": " << results[i].second;
-    }
+  map<double, vector<Hand>, std::greater<double>> equityHandsMap;
+  for (auto& result : results) {
+    equityHandsMap[static_cast<double>(result.first)]
+      .push_back(std::move(result.second));
   }
 
-  cout << endl;
+  cout << "Best Hands for Player 1:\n";
+  for (auto& equityHands: equityHandsMap) {
+    std::cout << colorEquity(equityHands.first) << ":\n";
+    std::sort(rbegin(equityHands.second), rend(equityHands.second));
+    printFormatted(equityHands.second);
+  }
 }
 
 void PokerGame::printCategories() const {
