@@ -28,7 +28,6 @@ class Card {
     return out;
   }
 
-
   bool operator<(const Card& other) const;
   bool operator==(const Card& other) const;
 
@@ -41,10 +40,8 @@ class Card {
 };
 
 namespace std {
-  template<>
-  struct hash<Card> {
-    size_t operator()(const Card& c) const {
-      return c.getId();
-    }
-  };
+template <>
+struct hash<Card> {
+  size_t operator()(const Card& c) const { return c.getId(); }
+};
 }

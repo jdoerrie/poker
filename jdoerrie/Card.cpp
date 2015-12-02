@@ -55,11 +55,11 @@ vector<Card> Card::enumerateAllCards() {
 }
 
 string Card::toString(bool useColors) const {
+  string str{toChar(rank_), toChar(suit_)};
   if (useColors) {
-    return getBashColor(suit_) + toChar(rank_) + toChar(suit_) +
-           getBashColor(Suit::INVALID);
+    return getBashColor(suit_) + str + getBashColor(Suit::INVALID);
   } else {
-    return {toChar(rank_), toChar(suit_)};
+    return str;
   }
 }
 
