@@ -5,22 +5,26 @@
 
 #include <vector>
 #include <string>
+#include <cassert>
+
+namespace poker {
+namespace card {
+
+using poker::rank::Rank;
+using poker::suit::Suit;
 
 class Card {
  public:
-  static const size_t MAX_ID;
-  static const size_t INVALID_ID;
+  constexpr Card(Rank rank = Rank::INVALID, Suit suit = Suit::INVALID)
+      : rank_(rank), suit_(suit) {}
 
-  Card(Rank rank = Rank::INVALID, Suit suit = Suit::INVALID);
-  Card(char cRank, char cSuit);
-  Card(const std::string& str);
-  Card(size_t id);
+  constexpr Card(char cRank, char cSuit)
+      : rank_(rank::fromChar(cRank)), suit_(suit::fromChar(cSuit)) {}
 
-  Rank getRank() const;
-  Suit getSuit() const;
-  size_t getId() const;
-  bool isValid() const;
-  static std::vector<Card> enumerateAllCards();
+  constexpr Card(const std::string& str): Card(str.at(0), str.at(1)) {}
+
+  constexpr Rank getRank() const { return rank_; }
+  constexpr Suit getSuit() const { return suit_; }
 
   std::string toString(bool useColor = false) const;
   friend std::ostream& operator<<(std::ostream& out, const Card& c) {
@@ -32,16 +36,36 @@ class Card {
   bool operator==(const Card& other) const;
 
  private:
-  size_t computeId() const;
-
-  Rank rank_;
-  Suit suit_;
-  size_t id_;
+  const Rank rank_;
+  const Suit suit_;
 };
 
+constexpr size_t getHash(Card card) {
+  return rank::getHash(card.getRank()) & suit::getHash(card.getSuit());
+}
+
+constexpr bool isValid(Card card) {
+  return rank::isValid(card.getRank()) && suit::isValid(card.getSuit());
+}
+
+template <class Container = std::vector<Card>>
+Container getAllCards() {
+  Container c;
+  for (auto&& rank : rank::getAllRanks()) {
+    for (auto&& suit : suit::getAllSuits()) {
+      c.emplace(c.end(), rank, suit);
+    }
+  }
+
+  return c;
+}
+}  // namespace card
+}  // namespace poker
+
 namespace std {
+using namespace poker::card;
 template <>
 struct hash<Card> {
-  size_t operator()(const Card& c) const { return c.getId(); }
+  size_t operator()(const Card& card) const { return getHash(card); }
 };
 }
