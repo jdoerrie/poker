@@ -1,20 +1,5 @@
 #include "GameType.h"
 
-int getNumCards(GameType gameType) {
-  switch (gameType) {
-    case GameType::HOLDEM:
-      return 2;
-
-    case GameType::OMAHA:
-      return 4;
-
-    case GameType::OMAHA5:
-      return 5;
-
-    default:
-      return 0;
-  }
-}
 
 std::string getGameTypeName(GameType gameType) {
   switch (gameType) {

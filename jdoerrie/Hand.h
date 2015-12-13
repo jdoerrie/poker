@@ -1,85 +1,51 @@
 #pragma once
 
+#include "Card.h"
+#include "GameType.h"
+#include "Rank.h"
+#include "Suit.h"
+
 #include <iostream>
+#include <numeric>
 #include <string>
+#include <cassert>
 #include <vector>
 
-enum class GameType;
-
-class Card;
-
+namespace poker {
+template <GameType Game>
 class Hand {
+ private:
+  static constexpr size_t numCards_{getNumCards(Game)};
+  std::array<Card, numCards_> cards_;
+
  public:
-  static const size_t MAX_ID;
-  static const size_t INVALID_ID;
+  constexpr explicit Hand(const std::array<Card, numCards_>& cards)
+      : cards_(cards) {}
+  explicit Hand(const std::string& str) {
+    assert(str.size() == 2 * numCards_);
 
-  Hand(const std::string& str = "");
-  Hand(const std::vector<Card>& cards);
-  Hand(size_t id);
-
-  const std::vector<Card>& getCards() const;
-  size_t getId() const;
-  static std::vector<Hand> enumerateAllHands(GameType gameType);
-
-  static std::vector<Hand> enumerateAllBoards(
-    const Hand& initialBoard = {},
-    const Hand& deadCards = {}
-  );
-
-  bool isValid(size_t numCards = 0) const;
-  bool addCard(const Card& card);
-  bool containsCard(const Card& card) const;
-
-  std::string toString(bool allRanksFirst = false, bool useColor = false) const;
-  friend std::ostream& operator<<(std::ostream& out, const Hand& hand) {
-    out << hand.toString(/* allRanksFirst */ false, /* useColor */ true);
-    return out;
+    for (size_t i = 0; i < numCards_; ++i) {
+      cards_[i] = Card(str[2 * i], str[2 * i + 1]);
+    }
   }
 
-  bool operator<(const Hand& other) const;
-  bool operator==(const Hand& other) const;
-
- private:
-  size_t id_;
-  std::vector<Card> cards_;
-
-  void normalize();
-
-  static void enumerateAllHelper(
-      std::vector<Hand>& hands,
-      const Hand& currHand,
-      size_t numCards,
-      const Hand& deadCards = {});
+  constexpr const std::array<Card, numCards_>& getCards() const {
+    return cards_;
+  }
 };
 
-template<class Container>
-void printFormatted(
-  const Container& c,
-  std::ostream& out  = std::cout,
-  const std::string& padding = "  ",
-  size_t lineLength = 80,
-  const std::string& seperator = ", "
-) {
-  out << padding;
-  size_t currLength = padding.size();
-  for (const Hand& hand: c) {
-    if (currLength + hand.toString().size() + seperator.size() > lineLength) {
-      out << std::endl << padding;
-      currLength = padding.size();
-    }
-
-    out << hand << seperator;
-    currLength += hand.toString().size() + seperator.size();
-  }
-
-  out << std::endl;
+template <GameType Game>
+constexpr size_t getHash(const Hand<Game>& hand) {
+  size_t result = 0;
+  std::for_each(begin(hand.getCards()), end(hand.getCards()),
+                [&](Card card) { result |= getHash(card); });
+  return result;
+}
 }
 
-namespace std {
-  template<>
-  struct hash<Hand> {
-    size_t operator()(const Hand& hand) const {
-      return hand.getId();
-    }
-  };
-}
+// namespace std {
+// template <>
+// struct hash<Hand> {
+//   size_t operator()(const Hand& hand) const { return hand.getId(); }
+// };
+// }
