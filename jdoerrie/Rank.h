@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <cstddef>
 
 enum class Rank {
   INVALID = 0,
@@ -72,5 +72,5 @@ constexpr Rank toRank(char c) {
 
 constexpr char toChar(Rank rank) {
   const char ranks[] = "--23456789TJQKA";
-  return ranks[static_cast<size_t>(rank)];
+  return ranks[static_cast<std::size_t>(rank)];
 }
