@@ -10,12 +10,14 @@ class Card;
 
 class CardCollection {
  public:
-  static const size_t MAX_ID;
-  static const size_t INVALID_ID;
+  // All bits from 1 to 52 are set
+  constexpr static size_t MAX_ID = (1LL << 53) - 2;
+  constexpr static size_t INVALID_ID = 1;
 
-  CardCollection(const std::string& str = "");
+  CardCollection() = default;
+  CardCollection(const std::string& str);
   CardCollection(const std::vector<Card>& cards);
-  CardCollection(size_t id);
+  explicit CardCollection(size_t id);
 
   const std::vector<Card>& getCards() const;
   size_t getId() const;

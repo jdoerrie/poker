@@ -1,30 +1,28 @@
 #include "Card.h"
+#include "utils.h"
 
 #include <string>
 
 using namespace std;
-
-const size_t Card::MAX_ID = 52;
-const size_t Card::INVALID_ID = 0;
 
 Card::Card(Rank rank, Suit suit) : rank_(rank), suit_(suit) {
   id_ = isValid() ? computeId() : INVALID_ID;
 }
 
 Card::Card(char cRank, char cSuit) {
-  rank_ = toRank(cRank);
-  suit_ = toSuit(cSuit);
+  rank_ = ToRank(cRank);
+  suit_ = ToSuit(cSuit);
   id_ = isValid() ? computeId() : INVALID_ID;
 }
 
 Card::Card(const string& str)
-    : rank_(Rank::INVALID), suit_(Suit::INVALID), id_(INVALID_ID) {
+    : rank_(Rank::NONE), suit_(Suit::NONE), id_(INVALID_ID) {
   if (str.size() != 2) {
     return;
   }
 
-  rank_ = toRank(str[0]);
-  suit_ = toSuit(str[1]);
+  rank_ = ToRank(str[0]);
+  suit_ = ToSuit(str[1]);
   id_ = isValid() ? computeId() : INVALID_ID;
 }
 
@@ -42,7 +40,7 @@ Suit Card::getSuit() const { return suit_; }
 size_t Card::getId() const { return id_; }
 
 bool Card::isValid() const {
-  return rank_ != Rank::INVALID && suit_ != Suit::INVALID;
+  return rank_ != Rank::NONE && suit_ != Suit::NONE;
 }
 
 vector<Card> Card::enumerateAllCards() {
@@ -55,9 +53,9 @@ vector<Card> Card::enumerateAllCards() {
 }
 
 string Card::toString(bool useColors) const {
-  string str{toChar(rank_), toChar(suit_)};
+  string str{ToChar(rank_), ToChar(suit_)};
   if (useColors) {
-    return getBashColor(suit_) + str + getBashColor(Suit::INVALID);
+    return GetBashColor(suit_) + str + GetBashColor(Suit::NONE);
   } else {
     return str;
   }

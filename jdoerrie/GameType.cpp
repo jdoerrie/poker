@@ -40,6 +40,6 @@ GameType getGameType(const std::string& name) {
   } else if (name == "omaha5") {
     return GameType::OMAHA5;
   } else {
-    return GameType::INVALID;
+    return GameType::NONE;
   }
 }

@@ -7,15 +7,12 @@
 
 using namespace std;
 
-const size_t CardCollection::MAX_ID = 0x1ffffffffffffeLL;
-const size_t CardCollection::INVALID_ID = 1;
-
-CardCollection::CardCollection(const string& str) : id_(INVALID_ID) {
+CardCollection::CardCollection(const string& str) : id_(0) {
   if (str.size() % 2 == 1) {
+    id_ = INVALID_ID;
     return;
   }
 
-  id_ = 0;
   for (size_t i = 0; i < str.size(); i += 2) {
     cards_.emplace_back(str[i], str[i + 1]);
     id_ |= 1LL << cards_.back().getId();
@@ -24,9 +21,8 @@ CardCollection::CardCollection(const string& str) : id_(INVALID_ID) {
   normalize();
 }
 
-CardCollection::CardCollection(const vector<Card>& cards) : id_(INVALID_ID), cards_(cards) {
-  id_ = 0;
-  for (const auto& card : cards) {
+CardCollection::CardCollection(const vector<Card>& cards) : id_(0), cards_(cards) {
+  for (const auto& card : cards_) {
     id_ |= 1LL << card.getId();
   }
 
@@ -89,8 +85,8 @@ string CardCollection::toString(bool allRanksFirst, bool useColor) const {
   if (allRanksFirst) {
     string ranksStr, suitsStr;
     for (const Card& card : cards_) {
-      ranksStr += toChar(card.getRank());
-      suitsStr += toChar(card.getSuit());
+      ranksStr += ToChar(card.getRank());
+      suitsStr += ToChar(card.getSuit());
     }
 
     return ranksStr + suitsStr;

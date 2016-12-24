@@ -3,7 +3,7 @@
 #include <string>
 
 enum class GameType {
-  INVALID,
+  NONE,
   HOLDEM,
   OMAHA,
   OMAHA5,

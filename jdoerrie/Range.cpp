@@ -87,8 +87,8 @@ string Range::replaceIntervals(string str) {
   vector<size_t> startIds, endIds;
   size_t maxDiff = 0;
   for (size_t i = 0; i < numCards; ++i) {
-    startIds.push_back(static_cast<size_t>(toRank(start[i])));
-    endIds.push_back(static_cast<size_t>(toRank(end[i])));
+    startIds.push_back(static_cast<size_t>(ToRank(start[i])));
+    endIds.push_back(static_cast<size_t>(ToRank(end[i])));
 
     if (startIds[i] < endIds[i]) {
       return str;
@@ -107,7 +107,7 @@ string Range::replaceIntervals(string str) {
   for (size_t i = 0; i <= maxDiff; ++i) {
     for (size_t j = 0; j < numCards; ++j) {
       size_t currId = startIds[j] - i * (startIds[j] - endIds[j]) / maxDiff;
-      ranks += toChar(static_cast<Rank>(currId));
+      ranks += ToChar(static_cast<Rank>(currId));
     }
 
     ranks += (i != maxDiff) ? '|' : ')';

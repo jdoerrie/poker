@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
   }
 
   GameType gameType = getGameType(game);
-  if (gameType == GameType::INVALID) {
+  if (gameType == GameType::NONE) {
     cerr << "ERROR: " << game << " is not a valid game" << endl;
     return 1;
   }
