@@ -3,7 +3,7 @@
 #include "Card.h"
 #include "Equity.h"
 #include "GameType.h"
-#include "Hand.h"
+#include "card_collection.h"
 #include "Range.h"
 
 #include <cstdio>
@@ -27,7 +27,7 @@ bool Evaluator::initialize(const string& fileName) {
   return true;
 }
 
-int Evaluator::getHandRank(const Hand& hand) {
+int Evaluator::getHandRank(const CardCollection& hand) {
   if (hand.getCards().size() < 5 || hand.getCards().size() > 7) {
     return 0;
   }
@@ -47,8 +47,8 @@ int Evaluator::getHandRank(const Hand& hand) {
 vector<Equity> Evaluator::evalRanges(
     GameType gameType,
     const vector<Range>& ranges,
-    const Hand& board,
-    const Hand& dead
+    const CardCollection& board,
+    const CardCollection& dead
 ) {
   if (gameType == GameType::HOLDEM) {
     return evalHoldemRanges(ranges, board, dead);
@@ -59,9 +59,9 @@ vector<Equity> Evaluator::evalRanges(
 
 vector<Equity> Evaluator::evalHands(
     GameType gameType,
-    const vector<Hand>& hands,
-    const Hand& board,
-    const Hand& dead
+    const vector<CardCollection>& hands,
+    const CardCollection& board,
+    const CardCollection& dead
 ) {
   switch (gameType) {
     case GameType::HOLDEM:
@@ -79,17 +79,17 @@ vector<Equity> Evaluator::evalHands(
 vector<Equity> Evaluator::evalRangesHelper(
     GameType gameType,
     const vector<Range>& ranges,
-    const Hand& board,
-    const Hand& dead,
-    vector<Hand> currHands
+    const CardCollection& board,
+    const CardCollection& dead,
+    vector<CardCollection> currHands
 ) {
   if (currHands.size() == ranges.size()) {
     return evalHands(gameType, currHands, board, dead);
   }
 
   vector<Equity> equities(ranges.size());
-  for (const auto& Hand: ranges[currHands.size()].getHands()) {
-    currHands.push_back(Hand);
+  for (const auto& CardCollection: ranges[currHands.size()].getHands()) {
+    currHands.push_back(CardCollection);
     auto result = evalRangesHelper(gameType, ranges, board, dead, currHands);
     currHands.pop_back();
 
@@ -103,9 +103,9 @@ vector<Equity> Evaluator::evalRangesHelper(
 
 
 vector<Equity> Evaluator::evalHoldemHands(
-    const vector<Hand>& hands,
-    const Hand& board,
-    const Hand& dead
+    const vector<CardCollection>& hands,
+    const CardCollection& board,
+    const CardCollection& dead
 ) {
   size_t numPlayers = hands.size();
   vector<Equity> equities(numPlayers);
@@ -245,9 +245,9 @@ vector<Equity> Evaluator::evalHoldemHands(
 }
 
 vector<Equity> Evaluator::evalOmahaHands(
-    const vector<Hand>& hands,
-    const Hand& board,
-    const Hand& dead
+    const vector<CardCollection>& hands,
+    const CardCollection& board,
+    const CardCollection& dead
 ) {
   size_t numPlayers = hands.size();
   vector<Equity> equities(numPlayers);
@@ -406,7 +406,7 @@ vector<Equity> Evaluator::evalOmahaHands(
 }
 
 vector<Equity> Evaluator::evalHoldemRanges(const vector<Range>& ranges,
-    const Hand& board, const Hand& dead) {
+    const CardCollection& board, const CardCollection& dead) {
   int numPlayers = ranges.size();
 
   vector<Equity> equities(numPlayers);

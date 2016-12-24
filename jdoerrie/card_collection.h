@@ -8,22 +8,22 @@ enum class GameType;
 
 class Card;
 
-class Hand {
+class CardCollection {
  public:
   static const size_t MAX_ID;
   static const size_t INVALID_ID;
 
-  Hand(const std::string& str = "");
-  Hand(const std::vector<Card>& cards);
-  Hand(size_t id);
+  CardCollection(const std::string& str = "");
+  CardCollection(const std::vector<Card>& cards);
+  CardCollection(size_t id);
 
   const std::vector<Card>& getCards() const;
   size_t getId() const;
-  static std::vector<Hand> enumerateAllHands(GameType gameType);
+  static std::vector<CardCollection> enumerateAllHands(GameType gameType);
 
-  static std::vector<Hand> enumerateAllBoards(
-    const Hand& initialBoard = {},
-    const Hand& deadCards = {}
+  static std::vector<CardCollection> enumerateAllBoards(
+    const CardCollection& initialBoard = {},
+    const CardCollection& deadCards = {}
   );
 
   bool isValid(size_t numCards = 0) const;
@@ -31,13 +31,13 @@ class Hand {
   bool containsCard(const Card& card) const;
 
   std::string toString(bool allRanksFirst = false, bool useColor = false) const;
-  friend std::ostream& operator<<(std::ostream& out, const Hand& hand) {
+  friend std::ostream& operator<<(std::ostream& out, const CardCollection& hand) {
     out << hand.toString(/* allRanksFirst */ false, /* useColor */ true);
     return out;
   }
 
-  bool operator<(const Hand& other) const;
-  bool operator==(const Hand& other) const;
+  bool operator<(const CardCollection& other) const;
+  bool operator==(const CardCollection& other) const;
 
  private:
   size_t id_;
@@ -46,10 +46,10 @@ class Hand {
   void normalize();
 
   static void enumerateAllHelper(
-      std::vector<Hand>& hands,
-      const Hand& currHand,
+      std::vector<CardCollection>& hands,
+      const CardCollection& currHand,
       size_t numCards,
-      const Hand& deadCards = {});
+      const CardCollection& deadCards = {});
 };
 
 template<class Container>
@@ -62,7 +62,7 @@ void printFormatted(
 ) {
   out << padding;
   size_t currLength = padding.size();
-  for (const Hand& hand: c) {
+  for (const CardCollection& hand: c) {
     if (currLength + hand.toString().size() + seperator.size() > lineLength) {
       out << std::endl << padding;
       currLength = padding.size();
@@ -77,8 +77,8 @@ void printFormatted(
 
 namespace std {
   template<>
-  struct hash<Hand> {
-    size_t operator()(const Hand& hand) const {
+  struct hash<CardCollection> {
+    size_t operator()(const CardCollection& hand) const {
       return hand.getId();
     }
   };

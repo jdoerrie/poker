@@ -12,8 +12,8 @@
 
 using namespace std;
 
-PokerGame::PokerGame(GameType gameType, vector<Range> ranges, Hand board,
-                     Hand dead)
+PokerGame::PokerGame(GameType gameType, vector<Range> ranges, CardCollection board,
+                     CardCollection dead)
     : gameType_(gameType), ranges_(ranges), board_(board), dead_(dead) {
   if (!Evaluator::initialize("../linux/HandRanks.dat")) {
     cerr << "Failed to initialize evaluator, exiting." << endl;
@@ -55,7 +55,7 @@ void PokerGame::printNextCards() const {
       continue;
     }
 
-    Hand newBoard = board_;
+    CardCollection newBoard = board_;
     newBoard.addCard(card);
 
     auto result = evaluator_.evalRanges(gameType_, ranges_, newBoard, dead_);
@@ -88,11 +88,11 @@ void PokerGame::printRangeBreakdown() const {
     return;
   }
 
-  typedef pair<Equity, Hand> Result;
+  typedef pair<Equity, CardCollection> Result;
   vector<Result> results;
 
   for (const auto& hand : ranges_[0].getHands()) {
-    Range heroRange = vector<Hand>({hand});
+    Range heroRange = vector<CardCollection>({hand});
     vector<Range> newRanges = ranges_;
     newRanges[0] = heroRange;
 
@@ -102,7 +102,7 @@ void PokerGame::printRangeBreakdown() const {
     }
   }
 
-  map<double, vector<Hand>, std::greater<double>> equityHandsMap;
+  map<double, vector<CardCollection>, std::greater<double>> equityHandsMap;
   for (auto& result : results) {
     equityHandsMap[static_cast<double>(result.first)]
       .push_back(std::move(result.second));
@@ -123,10 +123,10 @@ void PokerGame::printCategories() const {
   }
 
   size_t totalCounts = 0;
-  map<Category, vector<pair<int, Hand>>> categories;
+  map<Category, vector<pair<int, CardCollection>>> categories;
   for (const auto& hand : ranges_[0].getHands()) {
     int handRank =
-        Evaluator::getHandRank(Hand(board_.toString() + hand.toString()));
+        Evaluator::getHandRank(CardCollection(board_.toString() + hand.toString()));
     if (handRank == 0) {
       continue;
     }
@@ -160,8 +160,8 @@ void PokerGame::printDraws(double minProb) const {
     minProb = max(0.0, min(1.0, minProb));
   }
 
-  map<Category, vector<pair<double, Hand>>> draws;
-  auto allBoards = Hand::enumerateAllBoards(board_);
+  map<Category, vector<pair<double, CardCollection>>> draws;
+  auto allBoards = CardCollection::enumerateAllBoards(board_);
 
   for (const auto& hand : ranges_[0].getHands()) {
     bool isInvalid = false;
@@ -178,13 +178,13 @@ void PokerGame::printDraws(double minProb) const {
     }
 
     int handRank =
-        Evaluator::getHandRank(Hand(board_.toString() + hand.toString()));
+        Evaluator::getHandRank(CardCollection(board_.toString() + hand.toString()));
 
     vector<size_t> distribution(10);
     size_t totalCount = 0;
     size_t handRankTotal = 0;
     for (const auto& board : allBoards) {
-      Hand thisHand(board.toString() + hand.toString());
+      CardCollection thisHand(board.toString() + hand.toString());
       bool isInvalid = false;
       for (auto card : hand.getCards()) {
         isInvalid |= board.containsCard(card);
@@ -237,9 +237,9 @@ void PokerGame::printDraws(double minProb) const {
 GameType PokerGame::getGameType() const { return gameType_; }
 const vector<Range>& PokerGame::getRanges() const { return ranges_; }
 
-const Hand& PokerGame::getBoard() const { return board_; }
+const CardCollection& PokerGame::getBoard() const { return board_; }
 
-const Hand& PokerGame::getDead() const { return dead_; }
+const CardCollection& PokerGame::getDead() const { return dead_; }
 
 void PokerGame::setGameType(GameType gameType) {
   gameType_ = std::move(gameType);
@@ -247,6 +247,6 @@ void PokerGame::setGameType(GameType gameType) {
 
 void PokerGame::setRanges(vector<Range> ranges) { ranges_ = std::move(ranges); }
 
-void PokerGame::setBoard(Hand board) { board_ = std::move(board); }
+void PokerGame::setBoard(CardCollection board) { board_ = std::move(board); }
 
-void PokerGame::setDead(Hand dead) { dead_ = std::move(dead); }
+void PokerGame::setDead(CardCollection dead) { dead_ = std::move(dead); }

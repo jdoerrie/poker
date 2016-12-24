@@ -23,7 +23,7 @@
 
 enum class GameType;
 
-class Hand;
+class CardCollection;
 class Equity;
 class Range;
 
@@ -41,50 +41,50 @@ class Evaluator {
   /**
    * Given a hand as a vector<int> returns the rank of the hand.
    * Supports 5, 6 and 7 cards. Returns 0 on error.
-   * @param  hand Hand vector
+   * @param  hand CardCollection vector
    * @return      Hank Rank
    */
-  static int getHandRank(const Hand& hand);
+  static int getHandRank(const CardCollection& hand);
 
   static std::vector<Equity> evalRanges(
       GameType gameType,
       const std::vector<Range>& ranges,
-      const Hand& board,
-      const Hand& dead
+      const CardCollection& board,
+      const CardCollection& dead
   );
 
   static std::vector<Equity> evalHands(
       GameType gameType,
-      const std::vector<Hand>& hands,
-      const Hand& board,
-      const Hand& dead
+      const std::vector<CardCollection>& hands,
+      const CardCollection& board,
+      const CardCollection& dead
   );
 
   static std::vector<Equity> evalHoldemRanges(
       const std::vector<Range>& ranges,
-      const Hand& board,
-      const Hand& dead
+      const CardCollection& board,
+      const CardCollection& dead
   );
 
  private:
   static std::vector<Equity> evalRangesHelper(
       GameType gameType,
       const std::vector<Range>& ranges,
-      const Hand& boardCards,
-      const Hand& deadCards,
-      std::vector<Hand> currHands = {}
+      const CardCollection& boardCards,
+      const CardCollection& deadCards,
+      std::vector<CardCollection> currHands = {}
   );
 
   static std::vector<Equity> evalHoldemHands(
-      const std::vector<Hand>& hands,
-      const Hand& board,
-      const Hand& dead
+      const std::vector<CardCollection>& hands,
+      const CardCollection& board,
+      const CardCollection& dead
   );
 
   static std::vector<Equity> evalOmahaHands(
-      const std::vector<Hand>& hands,
-      const Hand& board,
-      const Hand& dead
+      const std::vector<CardCollection>& hands,
+      const CardCollection& board,
+      const CardCollection& dead
   );
 
 
