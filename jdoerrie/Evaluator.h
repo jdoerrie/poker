@@ -23,7 +23,7 @@
 
 enum class GameType;
 
-class CardCollection;
+class CardSet;
 class Equity;
 class Range;
 
@@ -41,50 +41,50 @@ class Evaluator {
   /**
    * Given a hand as a vector<int> returns the rank of the hand.
    * Supports 5, 6 and 7 cards. Returns 0 on error.
-   * @param  hand CardCollection vector
+   * @param  hand CardSet vector
    * @return      Hank Rank
    */
-  static int getHandRank(const CardCollection& hand);
+  static int getHandRank(const CardSet& hand);
 
   static std::vector<Equity> evalRanges(
       GameType gameType,
       const std::vector<Range>& ranges,
-      const CardCollection& board,
-      const CardCollection& dead
+      const CardSet& board,
+      const CardSet& dead
   );
 
   static std::vector<Equity> evalHands(
       GameType gameType,
-      const std::vector<CardCollection>& hands,
-      const CardCollection& board,
-      const CardCollection& dead
+      const std::vector<CardSet>& hands,
+      const CardSet& board,
+      const CardSet& dead
   );
 
   static std::vector<Equity> evalHoldemRanges(
       const std::vector<Range>& ranges,
-      const CardCollection& board,
-      const CardCollection& dead
+      const CardSet& board,
+      const CardSet& dead
   );
 
  private:
   static std::vector<Equity> evalRangesHelper(
       GameType gameType,
       const std::vector<Range>& ranges,
-      const CardCollection& boardCards,
-      const CardCollection& deadCards,
-      std::vector<CardCollection> currHands = {}
+      const CardSet& boardCards,
+      const CardSet& deadCards,
+      std::vector<CardSet> currHands = {}
   );
 
   static std::vector<Equity> evalHoldemHands(
-      const std::vector<CardCollection>& hands,
-      const CardCollection& board,
-      const CardCollection& dead
+      const std::vector<CardSet>& hands,
+      const CardSet& board,
+      const CardSet& dead
   );
 
   static std::vector<Equity> evalOmahaHands(
-      const std::vector<CardCollection>& hands,
-      const CardCollection& board,
-      const CardCollection& dead
+      const std::vector<CardSet>& hands,
+      const CardSet& board,
+      const CardSet& dead
   );
 
 

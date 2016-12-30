@@ -1,5 +1,5 @@
 #include "card.h"
-#include "card_collection.h"
+#include "card_set.h"
 #include "PokerGame.h"
 #include "Range.h"
 
@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
   ios_base::sync_with_stdio(false);
 
   string mode, game, handsStr;
-  CardCollection board, dead;
+  CardSet board, dead;
 
   static struct option long_options[] = {
       {"mode", required_argument, nullptr, 'm'},
@@ -40,11 +40,11 @@ int main(int argc, char* argv[]) {
         break;
 
       case 'b':
-        board = CardCollection(optarg);
+        board = CardSet(optarg);
         break;
 
       case 'd':
-        dead = CardCollection(optarg);
+        dead = CardSet(optarg);
         break;
     }
   }
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 
   vector<string> players;
   boost::split(players, handsStr, boost::is_any_of(":"));
-  vector<CardCollection> hands;
+  vector<CardSet> hands;
   for (const auto& player : players) {
     hands.emplace_back(player);
   }

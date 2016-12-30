@@ -3,7 +3,7 @@
 #include "card.h"
 #include "Evaluator.h"
 #include "GameType.h"
-#include "card_collection.h"
+#include "card_set.h"
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
@@ -12,7 +12,7 @@ using namespace std;
 using namespace boost;
 
 Range::Range(const string& description) : description_(description) {}
-Range::Range(const vector<CardCollection>& hands) : hands_(hands) {}
+Range::Range(const vector<CardSet>& hands) : hands_(hands) {}
 
 size_t Range::fromRegEx(const string& str, GameType gameType) {
   gameType_ = gameType;
@@ -23,7 +23,7 @@ size_t Range::fromRegEx(const string& str, GameType gameType) {
                          regex::perl);
   }
 
-  for (const CardCollection& hand : CardCollection::enumerateAllHands(gameType)) {
+  for (const CardSet& hand : CardSet::enumerateAllHands(gameType)) {
     for (auto regex : regexps) {
       if (regex_search(hand.toString(/* allRanksFirst */ true), regex)) {
         hands_.push_back(hand);
@@ -35,10 +35,10 @@ size_t Range::fromRegEx(const string& str, GameType gameType) {
   return hands_.size();
 }
 
-const vector<CardCollection>& Range::getHands() const { return hands_; }
+const vector<CardSet>& Range::getHands() const { return hands_; }
 
-Range Range::filter(const CardCollection& hand) const {
-  vector<CardCollection> newHands;
+Range Range::filter(const CardSet& hand) const {
+  vector<CardSet> newHands;
   for (const auto& hand_ : hands_) {
     if ((hand.GetId() & hand_.GetId()) == 0) {
       newHands.push_back(hand_);

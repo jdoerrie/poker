@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GameType.h"
-#include "card_collection.h"
+#include "card_set.h"
 
 #include <vector>
 
@@ -13,8 +13,8 @@ class PokerGame {
   PokerGame(
       GameType gameType = GameType::HOLDEM,
       std::vector<Range> ranges = {},
-      CardCollection board = {},
-      CardCollection dead = {}
+      CardSet board = {},
+      CardSet dead = {}
   );
 
   void printEquities() const;
@@ -25,18 +25,18 @@ class PokerGame {
 
   GameType getGameType() const;
   const std::vector<Range>& getRanges() const;
-  const CardCollection& getBoard() const;
-  const CardCollection& getDead() const;
+  const CardSet& getBoard() const;
+  const CardSet& getDead() const;
 
   void setGameType(GameType gameType);
   void setRanges(std::vector<Range> ranges);
-  void setBoard(CardCollection board);
-  void setDead(CardCollection dead);
+  void setBoard(CardSet board);
+  void setDead(CardSet dead);
 
  private:
   GameType gameType_;
   std::vector<Range> ranges_;
-  CardCollection board_;
-  CardCollection dead_;
+  CardSet board_;
+  CardSet dead_;
   static Evaluator evaluator_;
 };

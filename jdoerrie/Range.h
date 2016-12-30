@@ -5,23 +5,23 @@
 
 enum class GameType;
 
-class CardCollection;
+class CardSet;
 
 class Range {
  public:
   Range(const std::string& description = "");
-  Range(const std::vector<CardCollection>& hands);
+  Range(const std::vector<CardSet>& hands);
 
   size_t fromRegEx(const std::string& str, GameType gameType);
-  const std::vector<CardCollection>& getHands() const;
-  Range filter(const CardCollection& hand) const;
+  const std::vector<CardSet>& getHands() const;
+  Range filter(const CardSet& hand) const;
 
  private:
   std::string replaceSuitKeywords(std::string str);
   std::string replaceIntervals(std::string str);
   void normalize();
 
-  std::vector<CardCollection> hands_;
+  std::vector<CardSet> hands_;
   std::string description_;
   GameType gameType_;
 };

@@ -1,4 +1,4 @@
-#include "card_collection.h"
+#include "card_set.h"
 
 #include "card.h"
 #include "GameType.h"
@@ -7,7 +7,7 @@
 
 using namespace std;
 
-CardCollection::CardCollection(const string& str) : id_(0) {
+CardSet::CardSet(const string& str) : id_(0) {
   if (str.size() % 2 == 1) {
     id_ = INVALID_ID;
     return;
@@ -21,7 +21,7 @@ CardCollection::CardCollection(const string& str) : id_(0) {
   normalize();
 }
 
-CardCollection::CardCollection(const vector<Card>& cards)
+CardSet::CardSet(const vector<Card>& cards)
     : id_(0), cards_(cards) {
   for (const auto& card : cards_) {
     id_ |= 1LL << card.GetId();
@@ -30,7 +30,7 @@ CardCollection::CardCollection(const vector<Card>& cards)
   normalize();
 }
 
-CardCollection::CardCollection(size_t id) : id_(id) {
+CardSet::CardSet(size_t id) : id_(id) {
   while (id != 0) {
     int cardId = __builtin_ctzll(id);
     cards_.emplace_back(cardId);
@@ -40,34 +40,34 @@ CardCollection::CardCollection(size_t id) : id_(id) {
   std::reverse(std::begin(cards_), std::end(cards_));
 }
 
-const vector<Card>& CardCollection::getCards() const { return cards_; }
+const vector<Card>& CardSet::getCards() const { return cards_; }
 
-size_t CardCollection::GetId() const { return id_; }
+size_t CardSet::GetId() const { return id_; }
 
-vector<CardCollection> CardCollection::enumerateAllHands(GameType gameType) {
-  vector<CardCollection> hands;
+vector<CardSet> CardSet::enumerateAllHands(GameType gameType) {
+  vector<CardSet> hands;
   enumerateAllHelper(hands, {}, getNumCards(gameType));
   sort(hands.begin(), hands.end());
   hands.erase(unique(hands.begin(), hands.end()), hands.end());
   return hands;
 }
 
-bool CardCollection::isValid(size_t numCards) const {
+bool CardSet::isValid(size_t numCards) const {
   return !(id_ & 1LL) &&
          __builtin_popcountll(id_) == static_cast<int>(numCards);
 }
 
-vector<CardCollection> CardCollection::enumerateAllBoards(
-    const CardCollection& initialBoard, const CardCollection& deadCards) {
+vector<CardSet> CardSet::enumerateAllBoards(
+    const CardSet& initialBoard, const CardSet& deadCards) {
   int numCards = max(0, 5 - static_cast<int>(initialBoard.getCards().size()));
-  vector<CardCollection> boards;
+  vector<CardSet> boards;
   enumerateAllHelper(boards, initialBoard, numCards, deadCards);
   sort(std::begin(boards), std::end(boards));
   boards.erase(unique(std::begin(boards), std::end(boards)), std::end(boards));
   return boards;
 }
 
-bool CardCollection::addCard(const Card& card) {
+bool CardSet::addCard(const Card& card) {
   if (containsCard(card)) {
     return false;
   }
@@ -78,11 +78,11 @@ bool CardCollection::addCard(const Card& card) {
   return true;
 }
 
-bool CardCollection::containsCard(const Card& card) const {
+bool CardSet::containsCard(const Card& card) const {
   return id_ & (1LL << card.GetId());
 }
 
-string CardCollection::toString(bool allRanksFirst) const {
+string CardSet::toString(bool allRanksFirst) const {
   if (allRanksFirst) {
     string ranksStr, suitsStr;
     for (const Card& card : cards_) {
@@ -101,23 +101,23 @@ string CardCollection::toString(bool allRanksFirst) const {
   }
 }
 
-bool CardCollection::operator<(const CardCollection& other) const {
+bool CardSet::operator<(const CardSet& other) const {
   return cards_ < other.cards_;
 }
 
-bool CardCollection::operator==(const CardCollection& other) const {
+bool CardSet::operator==(const CardSet& other) const {
   return cards_ == other.cards_;
 }
 
-void CardCollection::normalize() {
+void CardSet::normalize() {
   sort(cards_.rbegin(), cards_.rend());
   cards_.erase(unique(cards_.begin(), cards_.end()), cards_.end());
 }
 
-void CardCollection::enumerateAllHelper(vector<CardCollection>& hands,
-                                        const CardCollection& currHand,
+void CardSet::enumerateAllHelper(vector<CardSet>& hands,
+                                        const CardSet& currHand,
                                         size_t numCards,
-                                        const CardCollection& deadCards) {
+                                        const CardSet& deadCards) {
   if (numCards == 0) {
     hands.push_back(currHand);
     return;
@@ -128,7 +128,7 @@ void CardCollection::enumerateAllHelper(vector<CardCollection>& hands,
       continue;
     }
 
-    CardCollection nextHand = currHand;
+    CardSet nextHand = currHand;
     nextHand.addCard(card);
     enumerateAllHelper(hands, nextHand, numCards - 1, deadCards);
   }
