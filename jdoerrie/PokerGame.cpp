@@ -1,10 +1,10 @@
 #include "PokerGame.h"
 
 #include "Category.h"
-#include "card.h"
-#include "Evaluator.h"
 #include "Equity.h"
+#include "Evaluator.h"
 #include "Range.h"
+#include "card.h"
 
 #include <algorithm>
 #include <iostream>
@@ -12,7 +12,9 @@
 
 using namespace std;
 
-PokerGame::PokerGame(GameType gameType, vector<Range> ranges, CardSet board,
+PokerGame::PokerGame(GameType gameType,
+                     vector<Range> ranges,
+                     CardSet board,
                      CardSet dead)
     : gameType_(gameType), ranges_(ranges), board_(board), dead_(dead) {
   if (!Evaluator::initialize("../linux/HandRanks.dat")) {
@@ -67,11 +69,9 @@ void PokerGame::printNextCards() const {
   sort(results.rbegin(), results.rend());
   cout << "Best Cards for Player 1:";
   for (size_t i = 0; i < results.size(); ++i) {
-    if (
-      i > 0 &&
+    if (i > 0 &&
         static_cast<double>(results[i - 1].first) ==
-        static_cast<double>(results[i].first)
-    ) {
+            static_cast<double>(results[i].first)) {
       cout << ", " << results[i].second;
     } else {
       cout << endl;
@@ -104,12 +104,12 @@ void PokerGame::printRangeBreakdown() const {
 
   map<double, vector<CardSet>, std::greater<double>> equityHandsMap;
   for (auto& result : results) {
-    equityHandsMap[static_cast<double>(result.first)]
-      .push_back(std::move(result.second));
+    equityHandsMap[static_cast<double>(result.first)].push_back(
+        std::move(result.second));
   }
 
   cout << "Best Hands for Player 1:\n";
-  for (auto& equityHands: equityHandsMap) {
+  for (auto& equityHands : equityHandsMap) {
     std::cout << colorEquity(equityHands.first) << ":\n";
     std::sort(rbegin(equityHands.second), rend(equityHands.second));
     printFormatted(equityHands.second);
@@ -234,19 +234,33 @@ void PokerGame::printDraws(double minProb) const {
   }
 }
 
-GameType PokerGame::getGameType() const { return gameType_; }
-const vector<Range>& PokerGame::getRanges() const { return ranges_; }
+GameType PokerGame::getGameType() const {
+  return gameType_;
+}
+const vector<Range>& PokerGame::getRanges() const {
+  return ranges_;
+}
 
-const CardSet& PokerGame::getBoard() const { return board_; }
+const CardSet& PokerGame::getBoard() const {
+  return board_;
+}
 
-const CardSet& PokerGame::getDead() const { return dead_; }
+const CardSet& PokerGame::getDead() const {
+  return dead_;
+}
 
 void PokerGame::setGameType(GameType gameType) {
   gameType_ = std::move(gameType);
 }
 
-void PokerGame::setRanges(vector<Range> ranges) { ranges_ = std::move(ranges); }
+void PokerGame::setRanges(vector<Range> ranges) {
+  ranges_ = std::move(ranges);
+}
 
-void PokerGame::setBoard(CardSet board) { board_ = std::move(board); }
+void PokerGame::setBoard(CardSet board) {
+  board_ = std::move(board);
+}
 
-void PokerGame::setDead(CardSet dead) { dead_ = std::move(dead); }
+void PokerGame::setDead(CardSet dead) {
+  dead_ = std::move(dead);
+}

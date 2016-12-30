@@ -17,9 +17,13 @@ Card::Card(const std::string& str)
     : rank_(str.size() == 2 ? rank::ToRank(str[0]) : Rank::NONE),
       suit_(str.size() == 2 ? suit::ToSuit(str[1]) : Suit::NONE) {}
 
-Rank Card::rank() const { return rank_; }
+Rank Card::rank() const {
+  return rank_;
+}
 
-Suit Card::suit() const { return suit_; }
+Suit Card::suit() const {
+  return suit_;
+}
 
 size_t Card::GetId() const {
   return (static_cast<size_t>(rank_) - 1) * suit::MAX_ID +
@@ -34,15 +38,15 @@ std::string Card::ToString() const {
   return std::string{rank::ToChar(rank_), suit::ToChar(suit_)};
 }
 
-bool operator<(const Card &lhs, const Card &rhs) {
+bool operator<(const Card& lhs, const Card& rhs) {
   return lhs.GetId() < rhs.GetId();
 }
 
-bool operator==(const Card &lhs, const Card &rhs) {
+bool operator==(const Card& lhs, const Card& rhs) {
   return lhs.GetId() == rhs.GetId();
 }
 
-std::ostream& operator<<(std::ostream& out, const Card &c) {
+std::ostream& operator<<(std::ostream& out, const Card& c) {
   return out << c.ToString();
 }
 

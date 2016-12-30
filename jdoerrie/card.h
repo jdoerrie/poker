@@ -8,7 +8,7 @@
 #include "suit.h"
 
 class Card {
-public:
+ public:
   static constexpr size_t MAX_ID = rank::MAX_ID * suit::MAX_ID;
   static constexpr size_t INVALID_ID = 0;
 
@@ -23,14 +23,14 @@ public:
   bool IsValid() const;
   std::string ToString() const;
 
-private:
+ private:
   Rank rank_;
   Suit suit_;
 };
 
 bool operator<(const Card& lhs, const Card& rhs);
 bool operator==(const Card& lhs, const Card& rhs);
-std::ostream& operator<<(std::ostream& out, const Card &c);
+std::ostream& operator<<(std::ostream& out, const Card& c);
 
 namespace card {
 std::vector<Card> EnumerateAllCards();

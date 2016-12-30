@@ -46,25 +46,19 @@ class Evaluator {
    */
   static int getHandRank(const CardSet& hand);
 
-  static std::vector<Equity> evalRanges(
-      GameType gameType,
-      const std::vector<Range>& ranges,
-      const CardSet& board,
-      const CardSet& dead
-  );
+  static std::vector<Equity> evalRanges(GameType gameType,
+                                        const std::vector<Range>& ranges,
+                                        const CardSet& board,
+                                        const CardSet& dead);
 
-  static std::vector<Equity> evalHands(
-      GameType gameType,
-      const std::vector<CardSet>& hands,
-      const CardSet& board,
-      const CardSet& dead
-  );
+  static std::vector<Equity> evalHands(GameType gameType,
+                                       const std::vector<CardSet>& hands,
+                                       const CardSet& board,
+                                       const CardSet& dead);
 
-  static std::vector<Equity> evalHoldemRanges(
-      const std::vector<Range>& ranges,
-      const CardSet& board,
-      const CardSet& dead
-  );
+  static std::vector<Equity> evalHoldemRanges(const std::vector<Range>& ranges,
+                                              const CardSet& board,
+                                              const CardSet& dead);
 
  private:
   static std::vector<Equity> evalRangesHelper(
@@ -72,31 +66,27 @@ class Evaluator {
       const std::vector<Range>& ranges,
       const CardSet& boardCards,
       const CardSet& deadCards,
-      std::vector<CardSet> currHands = {}
-  );
+      std::vector<CardSet> currHands = {});
 
-  static std::vector<Equity> evalHoldemHands(
-      const std::vector<CardSet>& hands,
-      const CardSet& board,
-      const CardSet& dead
-  );
+  static std::vector<Equity> evalHoldemHands(const std::vector<CardSet>& hands,
+                                             const CardSet& board,
+                                             const CardSet& dead);
 
-  static std::vector<Equity> evalOmahaHands(
-      const std::vector<CardSet>& hands,
-      const CardSet& board,
-      const CardSet& dead
-  );
+  static std::vector<Equity> evalOmahaHands(const std::vector<CardSet>& hands,
+                                            const CardSet& board,
+                                            const CardSet& dead);
 
+  static void evalHoldemRangesHelper(std::vector<Equity>& equities,
+                                     int numCards,
+                                     size_t currId,
+                                     int currRank,
+                                     size_t usedIds,
+                                     const std::vector<Range>& ranges);
 
-
-  static void evalHoldemRangesHelper(
-    std::vector<Equity>& equities, int numCards, size_t currId, int currRank,
-    size_t usedIds, const std::vector<Range>& ranges
-  );
-
-  static void rankHoldemRanges(
-    std::vector<Equity>& equities, size_t numPlayers, int boardRank,
-    const std::vector<Range>& ranges, std::vector<size_t>& indices,
-    size_t usedIds
-  );
+  static void rankHoldemRanges(std::vector<Equity>& equities,
+                               size_t numPlayers,
+                               int boardRank,
+                               const std::vector<Range>& ranges,
+                               std::vector<size_t>& indices,
+                               size_t usedIds);
 };

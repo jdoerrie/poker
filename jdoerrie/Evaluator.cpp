@@ -1,23 +1,23 @@
 #include "Evaluator.h"
 
-#include "card.h"
 #include "Equity.h"
 #include "GameType.h"
-#include "card_set.h"
 #include "Range.h"
+#include "card.h"
+#include "card_set.h"
 
 #include <cstdio>
-#include <iostream>
-#include <iomanip>
-#include <vector>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <vector>
 
 using namespace std;
 
 array<int, 32487834> Evaluator::handRanks;
 
 bool Evaluator::initialize(const string& fileName) {
-  FILE *fin = fopen(fileName.c_str(), "rb");
+  FILE* fin = fopen(fileName.c_str(), "rb");
   if (fin == nullptr) {
     return false;
   }
@@ -33,7 +33,7 @@ int Evaluator::getHandRank(const CardSet& hand) {
   }
 
   int rank = Card::MAX_ID + 1;
-  for (auto card: hand.getCards()) {
+  for (auto card : hand.getCards()) {
     rank = handRanks[rank + card.GetId()];
   }
 
@@ -44,12 +44,10 @@ int Evaluator::getHandRank(const CardSet& hand) {
   return rank;
 }
 
-vector<Equity> Evaluator::evalRanges(
-    GameType gameType,
-    const vector<Range>& ranges,
-    const CardSet& board,
-    const CardSet& dead
-) {
+vector<Equity> Evaluator::evalRanges(GameType gameType,
+                                     const vector<Range>& ranges,
+                                     const CardSet& board,
+                                     const CardSet& dead) {
   if (gameType == GameType::HOLDEM) {
     return evalHoldemRanges(ranges, board, dead);
   }
@@ -57,12 +55,10 @@ vector<Equity> Evaluator::evalRanges(
   return evalRangesHelper(gameType, ranges, board, dead);
 }
 
-vector<Equity> Evaluator::evalHands(
-    GameType gameType,
-    const vector<CardSet>& hands,
-    const CardSet& board,
-    const CardSet& dead
-) {
+vector<Equity> Evaluator::evalHands(GameType gameType,
+                                    const vector<CardSet>& hands,
+                                    const CardSet& board,
+                                    const CardSet& dead) {
   switch (gameType) {
     case GameType::HOLDEM:
       return Evaluator::evalHoldemHands(hands, board, dead);
@@ -76,19 +72,17 @@ vector<Equity> Evaluator::evalHands(
   }
 }
 
-vector<Equity> Evaluator::evalRangesHelper(
-    GameType gameType,
-    const vector<Range>& ranges,
-    const CardSet& board,
-    const CardSet& dead,
-    vector<CardSet> currHands
-) {
+vector<Equity> Evaluator::evalRangesHelper(GameType gameType,
+                                           const vector<Range>& ranges,
+                                           const CardSet& board,
+                                           const CardSet& dead,
+                                           vector<CardSet> currHands) {
   if (currHands.size() == ranges.size()) {
     return evalHands(gameType, currHands, board, dead);
   }
 
   vector<Equity> equities(ranges.size());
-  for (const auto& CardSet: ranges[currHands.size()].getHands()) {
+  for (const auto& CardSet : ranges[currHands.size()].getHands()) {
     currHands.push_back(CardSet);
     auto result = evalRangesHelper(gameType, ranges, board, dead, currHands);
     currHands.pop_back();
@@ -101,32 +95,29 @@ vector<Equity> Evaluator::evalRangesHelper(
   return equities;
 }
 
-
-vector<Equity> Evaluator::evalHoldemHands(
-    const vector<CardSet>& hands,
-    const CardSet& board,
-    const CardSet& dead
-) {
+vector<Equity> Evaluator::evalHoldemHands(const vector<CardSet>& hands,
+                                          const CardSet& board,
+                                          const CardSet& dead) {
   size_t numPlayers = hands.size();
   vector<Equity> equities(numPlayers);
 
   vector<bool> isUsed(Card::MAX_ID + 1);
   bool isValidGame = board.isValid() && dead.isValid();
 
-  for (auto hand: hands) {
+  for (auto hand : hands) {
     isValidGame &= hand.isValid(2);
-    for (auto card: hand.getCards()) {
+    for (auto card : hand.getCards()) {
       isValidGame &= !isUsed[card.GetId()];
       isUsed[card.GetId()] = true;
     }
   }
 
-  for (auto card: board.getCards()) {
+  for (auto card : board.getCards()) {
     isValidGame &= !isUsed[card.GetId()];
     isUsed[card.GetId()] = true;
   }
 
-  for (auto card: dead.getCards()) {
+  for (auto card : dead.getCards()) {
     isValidGame &= !isUsed[card.GetId()];
     isUsed[card.GetId()] = true;
   }
@@ -200,7 +191,7 @@ vector<Equity> Evaluator::evalHoldemHands(
 
             for (size_t i = 0; i < numPlayers; ++i) {
               ranks[i] = r4;
-              for (auto card: hands[i].getCards()) {
+              for (auto card : hands[i].getCards()) {
                 ranks[i] = handRanks[ranks[i] + card.GetId()];
               }
 
@@ -244,31 +235,29 @@ vector<Equity> Evaluator::evalHoldemHands(
   return equities;
 }
 
-vector<Equity> Evaluator::evalOmahaHands(
-    const vector<CardSet>& hands,
-    const CardSet& board,
-    const CardSet& dead
-) {
+vector<Equity> Evaluator::evalOmahaHands(const vector<CardSet>& hands,
+                                         const CardSet& board,
+                                         const CardSet& dead) {
   size_t numPlayers = hands.size();
   vector<Equity> equities(numPlayers);
 
   vector<bool> isUsed(Card::MAX_ID + 1);
   bool isValidGame = board.isValid() && dead.isValid();
 
-  for (auto hand: hands) {
+  for (auto hand : hands) {
     isValidGame &= hand.isValid(2);
-    for (auto card: hand.getCards()) {
+    for (auto card : hand.getCards()) {
       isValidGame &= !isUsed[card.GetId()];
       isUsed[card.GetId()] = true;
     }
   }
 
-  for (auto card: board.getCards()) {
+  for (auto card : board.getCards()) {
     isValidGame &= !isUsed[card.GetId()];
     isUsed[card.GetId()] = true;
   }
 
-  for (auto card: dead.getCards()) {
+  for (auto card : dead.getCards()) {
     isValidGame &= !isUsed[card.GetId()];
     isUsed[card.GetId()] = true;
   }
@@ -344,16 +333,15 @@ vector<Equity> Evaluator::evalOmahaHands(
                   for (size_t b2 = b1 + 1; b2 < 5; ++b2) {
                     for (size_t p0 = 0; p0 < numCards; ++p0) {
                       for (size_t p1 = p0 + 1; p1 < numCards; ++p1) {
-                        array<int, 5> currentHand = {{
-                          currentBoard[b0],
-                          currentBoard[b1],
-                          currentBoard[b2],
-                          static_cast<int>(hands[i].getCards()[p0].GetId()),
-                          static_cast<int>(hands[i].getCards()[p1].GetId())
-                        }};
+                        array<int, 5> currentHand = {
+                            {currentBoard[b0], currentBoard[b1],
+                             currentBoard[b2],
+                             static_cast<int>(hands[i].getCards()[p0].GetId()),
+                             static_cast<int>(
+                                 hands[i].getCards()[p1].GetId())}};
 
                         int currentRank = Card::MAX_ID + 1;
-                        for (size_t hand: currentHand) {
+                        for (size_t hand : currentHand) {
                           currentRank = handRanks[currentRank + hand];
                         }
 
@@ -406,7 +394,8 @@ vector<Equity> Evaluator::evalOmahaHands(
 }
 
 vector<Equity> Evaluator::evalHoldemRanges(const vector<Range>& ranges,
-    const CardSet& board, const CardSet& dead) {
+                                           const CardSet& board,
+                                           const CardSet& dead) {
   int numPlayers = ranges.size();
 
   vector<Equity> equities(numPlayers);
@@ -417,19 +406,22 @@ vector<Equity> Evaluator::evalHoldemRanges(const vector<Range>& ranges,
   size_t usedIds = board.GetId() | dead.GetId();
 
   int handRank = Card::MAX_ID + 1;
-  for (const auto& card: board.getCards()) {
+  for (const auto& card : board.getCards()) {
     handRank = handRanks[handRank + card.GetId()];
   }
 
   evalHoldemRangesHelper(equities, board.getCards().size(), 1, handRank,
-    usedIds, ranges);
+                         usedIds, ranges);
 
   return equities;
 }
 
-
-void Evaluator::evalHoldemRangesHelper(vector<Equity>& equities, int numCards,
-    size_t currId, int currRank, size_t usedIds, const vector<Range>& ranges) {
+void Evaluator::evalHoldemRangesHelper(vector<Equity>& equities,
+                                       int numCards,
+                                       size_t currId,
+                                       int currRank,
+                                       size_t usedIds,
+                                       const vector<Range>& ranges) {
   if (numCards == 5) {
     vector<size_t> indices(ranges.size());
     rankHoldemRanges(equities, 0, currRank, ranges, indices, usedIds);
@@ -443,16 +435,20 @@ void Evaluator::evalHoldemRangesHelper(vector<Equity>& equities, int numCards,
     }
 
     evalHoldemRangesHelper(equities, numCards + 1, currId + 1,
-      handRanks[currRank + currId], usedIds | (1LL << currId), ranges);
+                           handRanks[currRank + currId],
+                           usedIds | (1LL << currId), ranges);
     ++currId;
   }
 }
 
-void Evaluator::rankHoldemRanges(vector<Equity>& equities, size_t numPlayers,
-    int boardRank, const vector<Range>& ranges, vector<size_t>& indices,
-    size_t usedIds) {
-  if (ranges.size() == 2) { // optimized for heads-up
-    for (const auto& hero: ranges[0].getHands()) {
+void Evaluator::rankHoldemRanges(vector<Equity>& equities,
+                                 size_t numPlayers,
+                                 int boardRank,
+                                 const vector<Range>& ranges,
+                                 vector<size_t>& indices,
+                                 size_t usedIds) {
+  if (ranges.size() == 2) {  // optimized for heads-up
+    for (const auto& hero : ranges[0].getHands()) {
       if (hero.GetId() & usedIds) {
         continue;
       }
@@ -461,7 +457,7 @@ void Evaluator::rankHoldemRanges(vector<Equity>& equities, size_t numPlayers,
       heroRank = handRanks[heroRank + hero.getCards()[0].GetId()];
       heroRank = handRanks[heroRank + hero.getCards()[1].GetId()];
 
-      for (const auto& vill: ranges[1].getHands()) {
+      for (const auto& vill : ranges[1].getHands()) {
         if (vill.GetId() & (usedIds | hero.GetId())) {
           continue;
         }
@@ -485,7 +481,6 @@ void Evaluator::rankHoldemRanges(vector<Equity>& equities, size_t numPlayers,
 
     return;
   }
-
 
   if (numPlayers == ranges.size()) {
     vector<int> ranks(numPlayers, boardRank);
@@ -522,6 +517,6 @@ void Evaluator::rankHoldemRanges(vector<Equity>& equities, size_t numPlayers,
     }
 
     rankHoldemRanges(equities, numPlayers + 1, boardRank, ranges, indices,
-      usedIds | ranges[numPlayers].getHands()[currIdx].GetId());
+                     usedIds | ranges[numPlayers].getHands()[currIdx].GetId());
   }
 }

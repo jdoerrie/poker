@@ -10,12 +10,10 @@ class Range;
 
 class PokerGame {
  public:
-  PokerGame(
-      GameType gameType = GameType::HOLDEM,
-      std::vector<Range> ranges = {},
-      CardSet board = {},
-      CardSet dead = {}
-  );
+  PokerGame(GameType gameType = GameType::HOLDEM,
+            std::vector<Range> ranges = {},
+            CardSet board = {},
+            CardSet dead = {});
 
   void printEquities() const;
   void printNextCards() const;

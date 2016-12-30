@@ -11,6 +11,6 @@ constexpr const char* GetBashColor(Suit suit) {
     case Suit::SPADES:
       return "\x1B[0;37m";  // White
     default:
-      return "\x1B[0m";     // Blank
+      return "\x1B[0m";  // Blank
   };
 }

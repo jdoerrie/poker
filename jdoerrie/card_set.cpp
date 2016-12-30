@@ -1,7 +1,7 @@
 #include "card_set.h"
 
-#include "card.h"
 #include "GameType.h"
+#include "card.h"
 
 #include <algorithm>
 
@@ -21,8 +21,7 @@ CardSet::CardSet(const string& str) : id_(0) {
   normalize();
 }
 
-CardSet::CardSet(const vector<Card>& cards)
-    : id_(0), cards_(cards) {
+CardSet::CardSet(const vector<Card>& cards) : id_(0), cards_(cards) {
   for (const auto& card : cards_) {
     id_ |= 1LL << card.GetId();
   }
@@ -40,9 +39,13 @@ CardSet::CardSet(size_t id) : id_(id) {
   std::reverse(std::begin(cards_), std::end(cards_));
 }
 
-const vector<Card>& CardSet::getCards() const { return cards_; }
+const vector<Card>& CardSet::getCards() const {
+  return cards_;
+}
 
-size_t CardSet::GetId() const { return id_; }
+size_t CardSet::GetId() const {
+  return id_;
+}
 
 vector<CardSet> CardSet::enumerateAllHands(GameType gameType) {
   vector<CardSet> hands;
@@ -57,8 +60,8 @@ bool CardSet::isValid(size_t numCards) const {
          __builtin_popcountll(id_) == static_cast<int>(numCards);
 }
 
-vector<CardSet> CardSet::enumerateAllBoards(
-    const CardSet& initialBoard, const CardSet& deadCards) {
+vector<CardSet> CardSet::enumerateAllBoards(const CardSet& initialBoard,
+                                            const CardSet& deadCards) {
   int numCards = max(0, 5 - static_cast<int>(initialBoard.getCards().size()));
   vector<CardSet> boards;
   enumerateAllHelper(boards, initialBoard, numCards, deadCards);
@@ -115,9 +118,9 @@ void CardSet::normalize() {
 }
 
 void CardSet::enumerateAllHelper(vector<CardSet>& hands,
-                                        const CardSet& currHand,
-                                        size_t numCards,
-                                        const CardSet& deadCards) {
+                                 const CardSet& currHand,
+                                 size_t numCards,
+                                 const CardSet& deadCards) {
   if (numCards == 0) {
     hands.push_back(currHand);
     return;

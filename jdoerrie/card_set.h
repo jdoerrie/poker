@@ -24,9 +24,8 @@ class CardSet {
   static std::vector<CardSet> enumerateAllHands(GameType gameType);
 
   static std::vector<CardSet> enumerateAllBoards(
-    const CardSet& initialBoard = {},
-    const CardSet& deadCards = {}
-  );
+      const CardSet& initialBoard = {},
+      const CardSet& deadCards = {});
 
   bool isValid(size_t numCards = 0) const;
   bool addCard(const Card& card);
@@ -47,24 +46,21 @@ class CardSet {
 
   void normalize();
 
-  static void enumerateAllHelper(
-      std::vector<CardSet>& hands,
-      const CardSet& currHand,
-      size_t numCards,
-      const CardSet& deadCards = {});
+  static void enumerateAllHelper(std::vector<CardSet>& hands,
+                                 const CardSet& currHand,
+                                 size_t numCards,
+                                 const CardSet& deadCards = {});
 };
 
-template<class Container>
-void printFormatted(
-  const Container& c,
-  std::ostream& out  = std::cout,
-  const std::string& padding = "  ",
-  size_t lineLength = 80,
-  const std::string& seperator = ", "
-) {
+template <class Container>
+void printFormatted(const Container& c,
+                    std::ostream& out = std::cout,
+                    const std::string& padding = "  ",
+                    size_t lineLength = 80,
+                    const std::string& seperator = ", ") {
   out << padding;
   size_t currLength = padding.size();
-  for (const CardSet& hand: c) {
+  for (const CardSet& hand : c) {
     if (currLength + hand.toString().size() + seperator.size() > lineLength) {
       out << std::endl << padding;
       currLength = padding.size();
@@ -78,10 +74,8 @@ void printFormatted(
 }
 
 namespace std {
-  template<>
-  struct hash<CardSet> {
-    size_t operator()(const CardSet& hand) const {
-      return hand.GetId();
-    }
-  };
+template <>
+struct hash<CardSet> {
+  size_t operator()(const CardSet& hand) const { return hand.GetId(); }
+};
 }

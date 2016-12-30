@@ -6,15 +6,25 @@ using namespace std;
 
 Equity::Equity() : gameResults_(3), numGames_(0) {}
 
-void Equity::addWin() { addGame(1); }
+void Equity::addWin() {
+  addGame(1);
+}
 
-void Equity::addTie(size_t numPlayers) { addGame(numPlayers); }
+void Equity::addTie(size_t numPlayers) {
+  addGame(numPlayers);
+}
 
-void Equity::addLose() { addGame(0); }
+void Equity::addLose() {
+  addGame(0);
+}
 
-size_t Equity::getNumGames() const { return numGames_; }
+size_t Equity::getNumGames() const {
+  return numGames_;
+}
 
-const vector<size_t>& Equity::getGameResults() const { return gameResults_; }
+const vector<size_t>& Equity::getGameResults() const {
+  return gameResults_;
+}
 
 Equity::operator double() const {
   if (numGames_ == 0) {
@@ -65,8 +75,7 @@ string colorEquity(double equity) {
        "\x1B[38;5;220m", "\x1B[38;5;226m", "\x1B[38;5;190m", "\x1B[38;5;154m",
        "\x1B[38;5;118m", "\x1B[38;5;82m", "\x1B[38;5;46m"}};
 
-  size_t idx =
-      static_cast<size_t>(equity * gradient.size());
+  size_t idx = static_cast<size_t>(equity * gradient.size());
   if (idx == gradient.size()) {
     --idx;
   }

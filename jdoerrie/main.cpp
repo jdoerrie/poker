@@ -1,7 +1,7 @@
-#include "card.h"
-#include "card_set.h"
 #include "PokerGame.h"
 #include "Range.h"
+#include "card.h"
+#include "card_set.h"
 
 #include <boost/algorithm/string.hpp>
 #include <getopt.h>

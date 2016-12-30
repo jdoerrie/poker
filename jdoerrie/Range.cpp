@@ -1,12 +1,12 @@
 #include "Range.h"
 
-#include "card.h"
 #include "Evaluator.h"
 #include "GameType.h"
+#include "card.h"
 #include "card_set.h"
 
-#include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
 
 using namespace std;
 using namespace boost;
@@ -35,7 +35,9 @@ size_t Range::fromRegEx(const string& str, GameType gameType) {
   return hands_.size();
 }
 
-const vector<CardSet>& Range::getHands() const { return hands_; }
+const vector<CardSet>& Range::getHands() const {
+  return hands_;
+}
 
 Range Range::filter(const CardSet& hand) const {
   vector<CardSet> newHands;
