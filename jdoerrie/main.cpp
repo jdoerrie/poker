@@ -1,4 +1,4 @@
-#include "Card.h"
+#include "card.h"
 #include "card_collection.h"
 #include "PokerGame.h"
 #include "Range.h"

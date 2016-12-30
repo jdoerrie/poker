@@ -20,7 +20,7 @@ class CardCollection {
   explicit CardCollection(size_t id);
 
   const std::vector<Card>& getCards() const;
-  size_t getId() const;
+  size_t GetId() const;
   static std::vector<CardCollection> enumerateAllHands(GameType gameType);
 
   static std::vector<CardCollection> enumerateAllBoards(
@@ -32,9 +32,9 @@ class CardCollection {
   bool addCard(const Card& card);
   bool containsCard(const Card& card) const;
 
-  std::string toString(bool allRanksFirst = false, bool useColor = false) const;
+  std::string toString(bool allRanksFirst = false) const;
   friend std::ostream& operator<<(std::ostream& out, const CardCollection& hand) {
-    out << hand.toString(/* allRanksFirst */ false, /* useColor */ true);
+    out << hand.toString(/* allRanksFirst */ false);
     return out;
   }
 
@@ -81,7 +81,7 @@ namespace std {
   template<>
   struct hash<CardCollection> {
     size_t operator()(const CardCollection& hand) const {
-      return hand.getId();
+      return hand.GetId();
     }
   };
 }

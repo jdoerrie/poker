@@ -1,6 +1,6 @@
 #include "Range.h"
 
-#include "Card.h"
+#include "card.h"
 #include "Evaluator.h"
 #include "GameType.h"
 #include "card_collection.h"
@@ -40,7 +40,7 @@ const vector<CardCollection>& Range::getHands() const { return hands_; }
 Range Range::filter(const CardCollection& hand) const {
   vector<CardCollection> newHands;
   for (const auto& hand_ : hands_) {
-    if ((hand.getId() & hand_.getId()) == 0) {
+    if ((hand.GetId() & hand_.GetId()) == 0) {
       newHands.push_back(hand_);
     }
   }
@@ -87,8 +87,8 @@ string Range::replaceIntervals(string str) {
   vector<size_t> startIds, endIds;
   size_t maxDiff = 0;
   for (size_t i = 0; i < numCards; ++i) {
-    startIds.push_back(static_cast<size_t>(ToRank(start[i])));
-    endIds.push_back(static_cast<size_t>(ToRank(end[i])));
+    startIds.push_back(static_cast<size_t>(::rank::ToRank(start[i])));
+    endIds.push_back(static_cast<size_t>(::rank::ToRank(end[i])));
 
     if (startIds[i] < endIds[i]) {
       return str;
@@ -107,7 +107,7 @@ string Range::replaceIntervals(string str) {
   for (size_t i = 0; i <= maxDiff; ++i) {
     for (size_t j = 0; j < numCards; ++j) {
       size_t currId = startIds[j] - i * (startIds[j] - endIds[j]) / maxDiff;
-      ranks += ToChar(static_cast<Rank>(currId));
+      ranks += ::rank::ToChar(static_cast<Rank>(currId));
     }
 
     ranks += (i != maxDiff) ? '|' : ')';

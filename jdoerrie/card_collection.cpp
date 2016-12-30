@@ -1,6 +1,6 @@
 #include "card_collection.h"
 
-#include "Card.h"
+#include "card.h"
 #include "GameType.h"
 
 #include <algorithm>
@@ -15,15 +15,16 @@ CardCollection::CardCollection(const string& str) : id_(0) {
 
   for (size_t i = 0; i < str.size(); i += 2) {
     cards_.emplace_back(str[i], str[i + 1]);
-    id_ |= 1LL << cards_.back().getId();
+    id_ |= 1LL << cards_.back().GetId();
   }
 
   normalize();
 }
 
-CardCollection::CardCollection(const vector<Card>& cards) : id_(0), cards_(cards) {
+CardCollection::CardCollection(const vector<Card>& cards)
+    : id_(0), cards_(cards) {
   for (const auto& card : cards_) {
-    id_ |= 1LL << card.getId();
+    id_ |= 1LL << card.GetId();
   }
 
   normalize();
@@ -41,7 +42,7 @@ CardCollection::CardCollection(size_t id) : id_(id) {
 
 const vector<Card>& CardCollection::getCards() const { return cards_; }
 
-size_t CardCollection::getId() const { return id_; }
+size_t CardCollection::GetId() const { return id_; }
 
 vector<CardCollection> CardCollection::enumerateAllHands(GameType gameType) {
   vector<CardCollection> hands;
@@ -56,8 +57,8 @@ bool CardCollection::isValid(size_t numCards) const {
          __builtin_popcountll(id_) == static_cast<int>(numCards);
 }
 
-vector<CardCollection> CardCollection::enumerateAllBoards(const CardCollection& initialBoard,
-                                      const CardCollection& deadCards) {
+vector<CardCollection> CardCollection::enumerateAllBoards(
+    const CardCollection& initialBoard, const CardCollection& deadCards) {
   int numCards = max(0, 5 - static_cast<int>(initialBoard.getCards().size()));
   vector<CardCollection> boards;
   enumerateAllHelper(boards, initialBoard, numCards, deadCards);
@@ -71,36 +72,38 @@ bool CardCollection::addCard(const Card& card) {
     return false;
   }
 
-  id_ |= (1LL << card.getId());
+  id_ |= (1LL << card.GetId());
   auto lower = lower_bound(cards_.rbegin(), cards_.rend(), card);
   cards_.insert(lower.base(), card);
   return true;
 }
 
 bool CardCollection::containsCard(const Card& card) const {
-  return id_ & (1LL << card.getId());
+  return id_ & (1LL << card.GetId());
 }
 
-string CardCollection::toString(bool allRanksFirst, bool useColor) const {
+string CardCollection::toString(bool allRanksFirst) const {
   if (allRanksFirst) {
     string ranksStr, suitsStr;
     for (const Card& card : cards_) {
-      ranksStr += ToChar(card.getRank());
-      suitsStr += ToChar(card.getSuit());
+      ranksStr += ::rank::ToChar(card.rank());
+      suitsStr += ::suit::ToChar(card.suit());
     }
 
     return ranksStr + suitsStr;
   } else {
     string str;
     for (const Card& card : cards_) {
-      str += card.toString(useColor);
+      str += card.ToString(/* useColor */);
     }
 
     return str;
   }
 }
 
-bool CardCollection::operator<(const CardCollection& other) const { return cards_ < other.cards_; }
+bool CardCollection::operator<(const CardCollection& other) const {
+  return cards_ < other.cards_;
+}
 
 bool CardCollection::operator==(const CardCollection& other) const {
   return cards_ == other.cards_;
@@ -111,21 +114,22 @@ void CardCollection::normalize() {
   cards_.erase(unique(cards_.begin(), cards_.end()), cards_.end());
 }
 
-void CardCollection::enumerateAllHelper(vector<CardCollection>& hands, const CardCollection& currHand,
-                              size_t numCards, const CardCollection& deadCards) {
+void CardCollection::enumerateAllHelper(vector<CardCollection>& hands,
+                                        const CardCollection& currHand,
+                                        size_t numCards,
+                                        const CardCollection& deadCards) {
   if (numCards == 0) {
     hands.push_back(currHand);
     return;
   }
 
-  for (size_t nextId = 1; nextId <= Card::MAX_ID; ++nextId) {
-    Card nextCard(nextId);
-    if (currHand.containsCard(nextCard) || deadCards.containsCard(nextCard)) {
+  for (const auto& card : card::EnumerateAllCards()) {
+    if (currHand.containsCard(card) || deadCards.containsCard(card)) {
       continue;
     }
 
     CardCollection nextHand = currHand;
-    nextHand.addCard(nextCard);
-    enumerateAllHelper(hands, nextHand, numCards - 1);
+    nextHand.addCard(card);
+    enumerateAllHelper(hands, nextHand, numCards - 1, deadCards);
   }
 }

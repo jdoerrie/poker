@@ -1,7 +1,7 @@
 #include "PokerGame.h"
 
 #include "Category.h"
-#include "Card.h"
+#include "card.h"
 #include "Evaluator.h"
 #include "Equity.h"
 #include "Range.h"
@@ -50,7 +50,7 @@ void PokerGame::printNextCards() const {
   typedef pair<Equity, Card> Result;
   vector<Result> results;
 
-  for (const auto& card : Card::enumerateAllCards()) {
+  for (const auto& card : card::EnumerateAllCards()) {
     if (board_.containsCard(card) || dead_.containsCard(card)) {
       continue;
     }

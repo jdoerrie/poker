@@ -20,4 +20,4 @@ constexpr const char* toString(Category category) {
       "Four of a Kind",  "Straight Flush"};
 
   return categories[static_cast<size_t>(category)];
-};
+}
