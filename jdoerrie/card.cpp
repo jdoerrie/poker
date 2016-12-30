@@ -10,8 +10,8 @@ Card::Card(char c_rank, char c_suit)
     : rank_(rank::ToRank(c_rank)), suit_(suit::ToSuit(c_suit)) {}
 
 Card::Card(size_t id)
-    : rank_(static_cast<Rank>(id / suit::MAX_ID + 1)),
-      suit_(static_cast<Suit>(id % suit::MAX_ID + 1)) {}
+    : rank_(static_cast<Rank>((id - 1) / suit::MAX_ID + 1)),
+      suit_(static_cast<Suit>((id - 1) % suit::MAX_ID + 1)) {}
 
 Card::Card(const std::string& str)
     : rank_(str.size() == 2 ? rank::ToRank(str[0]) : Rank::NONE),
@@ -25,9 +25,9 @@ Suit Card::suit() const {
   return suit_;
 }
 
-size_t Card::GetId() const {
+size_t Card::id() const {
   return (static_cast<size_t>(rank_) - 1) * suit::MAX_ID +
-         (static_cast<size_t>(suit_) - 1);
+         (static_cast<size_t>(suit_) - 1) + 1;
 }
 
 bool Card::IsValid() const {
@@ -39,11 +39,11 @@ std::string Card::ToString() const {
 }
 
 bool operator<(const Card& lhs, const Card& rhs) {
-  return lhs.GetId() < rhs.GetId();
+  return lhs.id() < rhs.id();
 }
 
 bool operator==(const Card& lhs, const Card& rhs) {
-  return lhs.GetId() == rhs.GetId();
+  return lhs.id() == rhs.id();
 }
 
 std::ostream& operator<<(std::ostream& out, const Card& c) {

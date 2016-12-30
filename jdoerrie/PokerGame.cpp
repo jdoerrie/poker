@@ -53,12 +53,12 @@ void PokerGame::printNextCards() const {
   vector<Result> results;
 
   for (const auto& card : card::EnumerateAllCards()) {
-    if (board_.containsCard(card) || dead_.containsCard(card)) {
+    if (board_.ContainsCard(card) || dead_.ContainsCard(card)) {
       continue;
     }
 
     CardSet newBoard = board_;
-    newBoard.addCard(card);
+    newBoard.AddCard(card);
 
     auto result = evaluator_.evalRanges(gameType_, ranges_, newBoard, dead_);
     if (result[0].getNumGames() != 0) {
@@ -117,7 +117,7 @@ void PokerGame::printRangeBreakdown() const {
 }
 
 void PokerGame::printCategories() const {
-  if (getNumCards(gameType_) + board_.getCards().size() < 5) {
+  if (getNumCards(gameType_) + board_.ToCards().size() < 5) {
     cout << "Error: Need at least 5 cards for classification." << endl;
     return;
   }
@@ -126,7 +126,7 @@ void PokerGame::printCategories() const {
   map<Category, vector<pair<int, CardSet>>> categories;
   for (const auto& hand : ranges_[0].getHands()) {
     int handRank =
-        Evaluator::getHandRank(CardSet(board_.toString() + hand.toString()));
+        Evaluator::getHandRank(CardSet(board_.ToString() + hand.ToString()));
     if (handRank == 0) {
       continue;
     }
@@ -137,7 +137,7 @@ void PokerGame::printCategories() const {
   }
 
   for (const auto& category : categories) {
-    cout << toString(category.first) << ": ";
+    cout << ToString(category.first) << ": ";
     auto hands = category.second;
     sort(hands.rbegin(), hands.rend());
     // cout << hands.size() << "/" << totalCounts << " "
@@ -149,7 +149,7 @@ void PokerGame::printCategories() const {
 }
 
 void PokerGame::printDraws(double minProb) const {
-  if (getNumCards(gameType_) + board_.getCards().size() < 5) {
+  if (getNumCards(gameType_) + board_.ToCards().size() < 5) {
     cerr << "Error: Need at least 5 cards for classification." << endl;
     return;
   }
@@ -161,13 +161,13 @@ void PokerGame::printDraws(double minProb) const {
   }
 
   map<Category, vector<pair<double, CardSet>>> draws;
-  auto allBoards = CardSet::enumerateAllBoards(board_);
+  auto allBoards = EnumerateAllBoards(board_);
 
   for (const auto& hand : ranges_[0].getHands()) {
     bool isInvalid = false;
-    for (auto card : hand.getCards()) {
-      isInvalid |= board_.containsCard(card);
-      isInvalid |= dead_.containsCard(card);
+    for (auto card : hand.ToCards()) {
+      isInvalid |= board_.ContainsCard(card);
+      isInvalid |= dead_.ContainsCard(card);
       if (isInvalid) {
         break;
       }
@@ -178,16 +178,16 @@ void PokerGame::printDraws(double minProb) const {
     }
 
     int handRank =
-        Evaluator::getHandRank(CardSet(board_.toString() + hand.toString()));
+        Evaluator::getHandRank(CardSet(board_.ToString() + hand.ToString()));
 
     vector<size_t> distribution(10);
     size_t totalCount = 0;
     size_t handRankTotal = 0;
     for (const auto& board : allBoards) {
-      CardSet thisHand(board.toString() + hand.toString());
+      CardSet thisHand(board.ToString() + hand.ToString());
       bool isInvalid = false;
-      for (auto card : hand.getCards()) {
-        isInvalid |= board.containsCard(card);
+      for (auto card : hand.ToCards()) {
+        isInvalid |= board.ContainsCard(card);
         if (isInvalid) {
           break;
         }
@@ -225,7 +225,7 @@ void PokerGame::printDraws(double minProb) const {
       continue;
     }
 
-    cout << toString(drawCategory) << ": ";
+    cout << ToString(drawCategory) << ": ";
     const auto& hands = draws[drawCategory];
 
     for (auto hand : hands) {

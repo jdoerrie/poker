@@ -58,10 +58,6 @@ int main(int argc, char* argv[]) {
 
   vector<string> players;
   boost::split(players, handsStr, boost::is_any_of(":"));
-  vector<CardSet> hands;
-  for (const auto& player : players) {
-    hands.emplace_back(player);
-  }
 
   GameType gameType = getGameType(game);
   if (gameType == GameType::NONE) {

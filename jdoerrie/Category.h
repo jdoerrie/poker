@@ -13,7 +13,7 @@ enum class Category {
   Straight_Flush = 9,
 };
 
-constexpr const char* toString(Category category) {
+constexpr const char* ToString(Category category) {
   const char* categories[] = {
       "Invalid",         "High Card",     "Pair",  "Two Pair",
       "Three of a Kind", "Straight",      "Flush", "Full House",

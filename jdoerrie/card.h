@@ -19,7 +19,7 @@ class Card {
 
   Rank rank() const;
   Suit suit() const;
-  size_t GetId() const;
+  size_t id() const;
   bool IsValid() const;
   std::string ToString() const;
 

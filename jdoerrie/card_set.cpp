@@ -5,134 +5,167 @@
 
 #include <algorithm>
 
-using namespace std;
-
-CardSet::CardSet(const string& str) : id_(0) {
+CardSet::CardSet(const std::string& str) {
   if (str.size() % 2 == 1) {
-    id_ = INVALID_ID;
-    return;
+    bits_ = INVALID_ID;
   }
 
-  for (size_t i = 0; i < str.size(); i += 2) {
-    cards_.emplace_back(str[i], str[i + 1]);
-    id_ |= 1LL << cards_.back().GetId();
+  std::cout << str << std::endl;
+  for (auto i = size_t{0}; i < str.size(); i += 2) {
+    bits_.set(Card{str[i], str[i + 1]}.id());
+  }
+}
+
+CardSet::CardSet(const std::vector<Card>& cards) {
+  for (const auto& card : cards) {
+    bits_.set(card.id());
+  }
+}
+
+CardSet::CardSet(size_t id) : bits_{id} {}
+
+bool CardSet::empty() const {
+  return bits_ == 0;
+}
+
+size_t CardSet::size() const {
+  return bits_.count();
+}
+
+size_t CardSet::id() const {
+  return bits_.to_ullong();
+}
+
+std::vector<int> CardSet::ToIds() const {
+  std::vector<int> ids;
+  ids.reserve(size());
+  for (int i = bits_.size() - 1; i >= 0; --i) {
+    if (bits_[i]) {
+      ids.emplace_back(i);
+    }
   }
 
-  normalize();
+  return ids;
 }
 
-CardSet::CardSet(const vector<Card>& cards) : id_(0), cards_(cards) {
-  for (const auto& card : cards_) {
-    id_ |= 1LL << card.GetId();
+
+std::vector<Card> CardSet::ToCards() const {
+  std::vector<Card> cards;
+  cards.reserve(size());
+  for (int i = bits_.size() - 1; i >= 0; --i) {
+    if (bits_.test(i)) {
+      cards.emplace_back(i);
+    }
   }
 
-  normalize();
+  return cards;
 }
 
-CardSet::CardSet(size_t id) : id_(id) {
-  while (id != 0) {
-    int cardId = __builtin_ctzll(id);
-    cards_.emplace_back(cardId);
-    id &= ~(1LL << cardId);
-  }
 
-  std::reverse(std::begin(cards_), std::end(cards_));
+bool CardSet::IsValid(size_t num_cards) const {
+  return !bits_.test(0) && size() == num_cards;
 }
 
-const vector<Card>& CardSet::getCards() const {
-  return cards_;
-}
-
-size_t CardSet::GetId() const {
-  return id_;
-}
-
-vector<CardSet> CardSet::enumerateAllHands(GameType gameType) {
-  vector<CardSet> hands;
-  enumerateAllHelper(hands, {}, getNumCards(gameType));
-  sort(hands.begin(), hands.end());
-  hands.erase(unique(hands.begin(), hands.end()), hands.end());
-  return hands;
-}
-
-bool CardSet::isValid(size_t numCards) const {
-  return !(id_ & 1LL) &&
-         __builtin_popcountll(id_) == static_cast<int>(numCards);
-}
-
-vector<CardSet> CardSet::enumerateAllBoards(const CardSet& initialBoard,
-                                            const CardSet& deadCards) {
-  int numCards = max(0, 5 - static_cast<int>(initialBoard.getCards().size()));
-  vector<CardSet> boards;
-  enumerateAllHelper(boards, initialBoard, numCards, deadCards);
-  sort(std::begin(boards), std::end(boards));
-  boards.erase(unique(std::begin(boards), std::end(boards)), std::end(boards));
-  return boards;
-}
-
-bool CardSet::addCard(const Card& card) {
-  if (containsCard(card)) {
+bool CardSet::AddCard(const Card& card) {
+  if (ContainsCard(card)) {
     return false;
   }
 
-  id_ |= (1LL << card.GetId());
-  auto lower = lower_bound(cards_.rbegin(), cards_.rend(), card);
-  cards_.insert(lower.base(), card);
+  bits_.set(card.id());
   return true;
 }
 
-bool CardSet::containsCard(const Card& card) const {
-  return id_ & (1LL << card.GetId());
+bool CardSet::ContainsCard(const Card& card) const {
+  return bits_.test(card.id());
 }
 
-string CardSet::toString(bool allRanksFirst) const {
+std::string CardSet::ToString(bool allRanksFirst) const {
   if (allRanksFirst) {
-    string ranksStr, suitsStr;
-    for (const Card& card : cards_) {
+    std::string ranksStr, suitsStr;
+    for (const Card& card : ToCards()) {
       ranksStr += ::rank::ToChar(card.rank());
       suitsStr += ::suit::ToChar(card.suit());
     }
 
     return ranksStr + suitsStr;
   } else {
-    string str;
-    for (const Card& card : cards_) {
-      str += card.ToString(/* useColor */);
+    std::string str;
+    for (const Card& card : ToCards()) {
+      str += card.ToString();
     }
 
     return str;
   }
 }
 
-bool CardSet::operator<(const CardSet& other) const {
-  return cards_ < other.cards_;
+bool operator<(const CardSet& lhs, const CardSet& rhs) {
+  return lhs.id() < rhs.id();
 }
 
-bool CardSet::operator==(const CardSet& other) const {
-  return cards_ == other.cards_;
+bool operator==(const CardSet& lhs, const CardSet& rhs) {
+  return lhs.id() == rhs.id();
 }
 
-void CardSet::normalize() {
-  sort(cards_.rbegin(), cards_.rend());
-  cards_.erase(unique(cards_.begin(), cards_.end()), cards_.end());
+std::ostream& operator<<(std::ostream& out, const CardSet& hand) {
+  out << hand.ToString();
+  return out;
 }
 
-void CardSet::enumerateAllHelper(vector<CardSet>& hands,
-                                 const CardSet& currHand,
-                                 size_t numCards,
-                                 const CardSet& deadCards) {
+void EnumerateAllHelper(std::vector<CardSet>& hands,
+                        const CardSet& currHand,
+                        size_t numCards,
+                        const CardSet& deadCards) {
   if (numCards == 0) {
     hands.push_back(currHand);
     return;
   }
 
   for (const auto& card : card::EnumerateAllCards()) {
-    if (currHand.containsCard(card) || deadCards.containsCard(card)) {
+    if (currHand.ContainsCard(card) || deadCards.ContainsCard(card)) {
       continue;
     }
 
     CardSet nextHand = currHand;
-    nextHand.addCard(card);
-    enumerateAllHelper(hands, nextHand, numCards - 1, deadCards);
+    nextHand.AddCard(card);
+    EnumerateAllHelper(hands, nextHand, numCards - 1, deadCards);
   }
+}
+
+std::vector<CardSet> EnumerateAllHands(GameType gameType,
+                                       const CardSet& deadCards) {
+  std::vector<CardSet> hands;
+  EnumerateAllHelper(hands, {}, getNumCards(gameType), deadCards);
+  sort(hands.begin(), hands.end());
+  hands.erase(unique(hands.begin(), hands.end()), hands.end());
+  return hands;
+}
+
+std::vector<CardSet> EnumerateAllBoards(const CardSet& initialBoard,
+                                        const CardSet& deadCards) {
+  int numCards = std::max(0, 5 - static_cast<int>(initialBoard.size()));
+  std::vector<CardSet> boards;
+  EnumerateAllHelper(boards, initialBoard, numCards, deadCards);
+  sort(std::begin(boards), std::end(boards));
+  boards.erase(unique(std::begin(boards), std::end(boards)), std::end(boards));
+  return boards;
+}
+
+void printFormatted(const std::vector<CardSet>& cards,
+                    std::ostream& out,
+                    const std::string& padding,
+                    size_t lineLength,
+                    const std::string& seperator) {
+  out << padding;
+  size_t currLength = padding.size();
+  for (const CardSet& hand : cards) {
+    if (currLength + hand.ToString().size() + seperator.size() > lineLength) {
+      out << std::endl << padding;
+      currLength = padding.size();
+    }
+
+    out << hand << seperator;
+    currLength += hand.ToString().size() + seperator.size();
+  }
+
+  out << std::endl;
 }

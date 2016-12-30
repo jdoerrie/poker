@@ -23,9 +23,12 @@ size_t Range::fromRegEx(const string& str, GameType gameType) {
                          regex::perl);
   }
 
-  for (const CardSet& hand : CardSet::enumerateAllHands(gameType)) {
+  for (const CardSet& hand : EnumerateAllHands(gameType)) {
     for (auto regex : regexps) {
-      if (regex_search(hand.toString(/* allRanksFirst */ true), regex)) {
+      // std::cout << hand.ToString(true) << hand.size() << '\n';
+      // std::cout << hand.ToString(true) << std::endl;
+      assert(hand.ToString().size() == 4);
+      if (regex_search(hand.ToString(/* allRanksFirst */ true), regex)) {
         hands_.push_back(hand);
         break;
       }
@@ -42,7 +45,7 @@ const vector<CardSet>& Range::getHands() const {
 Range Range::filter(const CardSet& hand) const {
   vector<CardSet> newHands;
   for (const auto& hand_ : hands_) {
-    if ((hand.GetId() & hand_.GetId()) == 0) {
+    if ((hand.id() & hand_.id()) == 0) {
       newHands.push_back(hand_);
     }
   }

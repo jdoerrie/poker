@@ -3,11 +3,11 @@
 #include <array>
 
 enum class Suit {
+  NONE,
   CLUBS,
   DIAMONDS,
   HEARTS,
   SPADES,
-  NONE,
 };
 
 namespace suit {
@@ -46,10 +46,25 @@ constexpr char ToChar(Suit suit) {
   }
 }
 
+constexpr const char* ToUTF8(Suit suit) {
+  switch (suit) {
+    case Suit::CLUBS:
+      return u8"♣";
+    case Suit::DIAMONDS:
+      return u8"♦";
+    case Suit::HEARTS:
+      return u8"♥";
+    case Suit::SPADES:
+      return u8"♠";
+    default:
+      return "-";
+  }
+}
+
 constexpr size_t MIN_ID = static_cast<size_t>(Suit::CLUBS);
 constexpr size_t MAX_ID = static_cast<size_t>(Suit::SPADES);
 
-constexpr std::array<Suit, MAX_ID + 1> GetAllValidSuits() {
+constexpr std::array<Suit, MAX_ID> GetAllValidSuits() {
   return {{Suit::CLUBS, Suit::DIAMONDS, Suit::HEARTS, Suit::SPADES}};
 }
 
