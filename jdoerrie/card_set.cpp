@@ -83,7 +83,7 @@ std::string CardSet::ToString(bool allRanksFirst) const {
   if (allRanksFirst) {
     std::string ranksStr, suitsStr;
     for (const Card& card : ToCards()) {
-      ranksStr += ::rank::ToChar(card.rank());
+      ranksStr += card.rank().ToChar();
       suitsStr += ::suit::ToChar(card.suit());
     }
 
