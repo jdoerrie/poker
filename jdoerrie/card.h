@@ -9,7 +9,7 @@
 
 class Card {
  public:
-  static constexpr size_t MAX_ID = Rank::MAX_ID * suit::MAX_ID;
+  static constexpr size_t MAX_ID = Rank::MAX_ID * Suit::MAX_ID;
   static constexpr size_t INVALID_ID = 0;
 
   Card(Rank rank, Suit suit);

@@ -2,70 +2,84 @@
 
 #include <array>
 
-enum class Suit {
-  NONE,
-  CLUBS,
-  DIAMONDS,
-  HEARTS,
-  SPADES,
+class Suit {
+ private:
+  enum class kSuit {
+    NONE,
+    CLUBS,
+    DIAMONDS,
+    HEARTS,
+    SPADES,
+  };
+
+  kSuit suit_ = kSuit::NONE;
+
+ public:
+  constexpr Suit() = default;
+  constexpr Suit(size_t id) : suit_{static_cast<kSuit>(id)} {}
+  constexpr Suit(char c) {
+    switch (c) {
+      case 'c':
+      case 'C':
+        suit_ = kSuit::CLUBS;
+        return;
+      case 'd':
+      case 'D':
+        suit_ = kSuit::DIAMONDS;
+        return;
+      case 'h':
+      case 'H':
+        suit_ = kSuit::HEARTS;
+        return;
+      case 's':
+      case 'S':
+        suit_ = kSuit::SPADES;
+        return;
+      default:
+        suit_ = kSuit::NONE;
+    }
+  }
+
+  constexpr static auto MIN_ID = static_cast<size_t>(kSuit::CLUBS);
+  constexpr static auto MAX_ID = static_cast<size_t>(kSuit::SPADES);
+
+  constexpr auto id() const { return static_cast<size_t>(suit_); }
+  constexpr auto IsValid() const { return suit_ != kSuit::NONE; }
+  constexpr auto ToChar() const {
+    switch (suit_) {
+      case kSuit::CLUBS:
+        return 'c';
+      case kSuit::DIAMONDS:
+        return 'd';
+      case kSuit::HEARTS:
+        return 'h';
+      case kSuit::SPADES:
+        return 's';
+      default:
+        return '?';
+    }
+  }
+
+  constexpr auto ToUTF8() {
+    switch (suit_) {
+      case kSuit::CLUBS:
+        return u8"♣";
+      case kSuit::DIAMONDS:
+        return u8"♦";
+      case kSuit::HEARTS:
+        return u8"♥";
+      case kSuit::SPADES:
+        return u8"♠";
+      default:
+        return "-";
+    }
+  }
 };
 
 namespace suit {
 
-constexpr Suit ToSuit(char c) {
-  switch (c) {
-    case 'c':
-    case 'C':
-      return Suit::CLUBS;
-    case 'd':
-    case 'D':
-      return Suit::DIAMONDS;
-    case 'h':
-    case 'H':
-      return Suit::HEARTS;
-    case 's':
-    case 'S':
-      return Suit::SPADES;
-    default:
-      return Suit::NONE;
-  }
-}
-
-constexpr char ToChar(Suit suit) {
-  switch (suit) {
-    case Suit::CLUBS:
-      return 'c';
-    case Suit::DIAMONDS:
-      return 'd';
-    case Suit::HEARTS:
-      return 'h';
-    case Suit::SPADES:
-      return 's';
-    default:
-      return '-';
-  }
-}
-
-constexpr const char* ToUTF8(Suit suit) {
-  switch (suit) {
-    case Suit::CLUBS:
-      return u8"♣";
-    case Suit::DIAMONDS:
-      return u8"♦";
-    case Suit::HEARTS:
-      return u8"♥";
-    case Suit::SPADES:
-      return u8"♠";
-    default:
-      return "-";
-  }
-}
-
-constexpr size_t MIN_ID = static_cast<size_t>(Suit::CLUBS);
-constexpr size_t MAX_ID = static_cast<size_t>(Suit::SPADES);
-
-constexpr std::array<Suit, MAX_ID> GetAllValidSuits() {
-  return {{Suit::CLUBS, Suit::DIAMONDS, Suit::HEARTS, Suit::SPADES}};
+constexpr std::array<Suit, Suit::MAX_ID> GetAllValidSuits() {
+  return {{Suit{'c'}, Suit{'d'}, Suit{'h'}, Suit{'s'}}};
 }
 
 }  // namespace suit

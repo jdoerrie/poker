@@ -2,20 +2,18 @@
 
 #include <ostream>
 
-#include "utils.h"
-
 Card::Card(Rank rank, Suit suit) : rank_{rank}, suit_(suit) {}
 
 Card::Card(char c_rank, char c_suit)
-    : rank_{c_rank}, suit_(suit::ToSuit(c_suit)) {}
+    : rank_{c_rank}, suit_{c_suit} {}
 
 Card::Card(size_t id)
-    : rank_{(id - 1) / suit::MAX_ID + 1},
-      suit_(static_cast<Suit>((id - 1) % suit::MAX_ID + 1)) {}
+    : rank_{(id - 1) / Suit::MAX_ID + 1},
+      suit_{(id - 1) % Suit::MAX_ID + 1} {}
 
 Card::Card(const std::string& str)
     : rank_{str.size() == 2 ? str[0] : '?'},
-      suit_(str.size() == 2 ? suit::ToSuit(str[1]) : Suit::NONE) {}
+      suit_{str.size() == 2 ? str[1] : '?'} {}
 
 Rank Card::rank() const {
   return rank_;
@@ -26,16 +24,15 @@ Suit Card::suit() const {
 }
 
 size_t Card::id() const {
-  return (rank_.id() - 1) * suit::MAX_ID +
-         (static_cast<size_t>(suit_) - 1) + 1;
+  return (rank_.id() - 1) * Suit::MAX_ID + suit_.id();
 }
 
 bool Card::IsValid() const {
-  return rank_.IsValid() && suit_ != Suit::NONE;
+  return rank_.IsValid() && suit_.IsValid();
 }
 
 std::string Card::ToString() const {
-  return std::string{rank_.ToChar(), suit::ToChar(suit_)};
+  return std::string{rank_.ToChar(), suit_.ToChar()};
 }
 
 bool operator<(const Card& lhs, const Card& rhs) {

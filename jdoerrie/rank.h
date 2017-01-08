@@ -3,7 +3,7 @@
 #include <array>
 
 class Rank {
- public:
+ private:
   enum class kRank {
     NONE,
     TWO,
@@ -21,11 +21,10 @@ class Rank {
     ACE,
   };
 
-  constexpr static auto MIN_ID = static_cast<size_t>(kRank::TWO);
-  constexpr static auto MAX_ID = static_cast<size_t>(kRank::ACE);
+  kRank rank_ = kRank::NONE;
 
+ public:
   constexpr Rank() = default;
-  constexpr explicit Rank(kRank rank) : rank_{rank} {}
   constexpr explicit Rank(size_t id) : rank_{static_cast<kRank>(id)} {}
   constexpr explicit Rank(char c) {
     switch (c) {
@@ -78,8 +77,10 @@ class Rank {
     }
   }
 
+  constexpr static auto MIN_ID = static_cast<size_t>(kRank::TWO);
+  constexpr static auto MAX_ID = static_cast<size_t>(kRank::ACE);
+
   constexpr auto id() const { return static_cast<size_t>(rank_); }
-  constexpr auto rank() const { return rank_; }
   constexpr auto IsValid() const { return rank_ != kRank::NONE; }
   constexpr auto ToChar() const {
     switch (rank_) {
@@ -113,9 +114,6 @@ class Rank {
         return '?';
     }
   }
-
- private:
-  kRank rank_ = kRank::NONE;
 };
 
 namespace rank {
