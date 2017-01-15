@@ -48,7 +48,6 @@ std::vector<int> CardSet::ToIds() const {
   return ids;
 }
 
-
 std::vector<Card> CardSet::ToCards() const {
   std::vector<Card> cards;
   cards.reserve(size());
@@ -61,13 +60,12 @@ std::vector<Card> CardSet::ToCards() const {
   return cards;
 }
 
-
 bool CardSet::IsValid(size_t num_cards) const {
   return !bits_.test(0) && size() == num_cards;
 }
 
-bool CardSet::AddCard(const Card& card) {
-  if (ContainsCard(card)) {
+bool CardSet::Add(const Card& card) {
+  if (Contains(card)) {
     return false;
   }
 
@@ -75,7 +73,7 @@ bool CardSet::AddCard(const Card& card) {
   return true;
 }
 
-bool CardSet::ContainsCard(const Card& card) const {
+bool CardSet::Contains(const Card& card) const {
   return bits_.test(card.id());
 }
 
@@ -121,12 +119,12 @@ void EnumerateAllHelper(std::vector<CardSet>& hands,
   }
 
   for (const auto& card : card::EnumerateAllCards()) {
-    if (currHand.ContainsCard(card) || deadCards.ContainsCard(card)) {
+    if (currHand.Contains(card) || deadCards.Contains(card)) {
       continue;
     }
 
     CardSet nextHand = currHand;
-    nextHand.AddCard(card);
+    nextHand.Add(card);
     EnumerateAllHelper(hands, nextHand, numCards - 1, deadCards);
   }
 }

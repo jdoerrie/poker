@@ -53,12 +53,12 @@ void PokerGame::printNextCards() const {
   vector<Result> results;
 
   for (const auto& card : card::EnumerateAllCards()) {
-    if (board_.ContainsCard(card) || dead_.ContainsCard(card)) {
+    if (board_.Contains(card) || dead_.Contains(card)) {
       continue;
     }
 
     CardSet newBoard = board_;
-    newBoard.AddCard(card);
+    newBoard.Add(card);
 
     auto result = evaluator_.evalRanges(gameType_, ranges_, newBoard, dead_);
     if (result[0].getNumGames() != 0) {
@@ -166,8 +166,8 @@ void PokerGame::printDraws(double minProb) const {
   for (const auto& hand : ranges_[0].getHands()) {
     bool isInvalid = false;
     for (auto card : hand.ToCards()) {
-      isInvalid |= board_.ContainsCard(card);
-      isInvalid |= dead_.ContainsCard(card);
+      isInvalid |= board_.Contains(card);
+      isInvalid |= dead_.Contains(card);
       if (isInvalid) {
         break;
       }
@@ -187,7 +187,7 @@ void PokerGame::printDraws(double minProb) const {
       CardSet thisHand(board.ToString() + hand.ToString());
       bool isInvalid = false;
       for (auto card : hand.ToCards()) {
-        isInvalid |= board.ContainsCard(card);
+        isInvalid |= board.Contains(card);
         if (isInvalid) {
           break;
         }

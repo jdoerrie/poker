@@ -26,8 +26,8 @@ class CardSet {
   std::vector<Card> ToCards() const;
 
   bool IsValid(size_t num_cards = 0) const;
-  bool AddCard(const Card& card);
-  bool ContainsCard(const Card& card) const;
+  bool Add(const Card& card);
+  bool Contains(const Card& card) const;
 
   std::string ToString(bool allRanksFirst = false) const;
 
@@ -46,7 +46,8 @@ std::vector<CardSet> EnumerateAllBoards(const CardSet& initialBoard = {},
 
 void printFormatted(const std::vector<CardSet>& cards,
                     std::ostream& out = std::cout,
-                    const std::string& padding = "  ", size_t lineLength = 80,
+                    const std::string& padding = "  ",
+                    size_t lineLength = 80,
                     const std::string& seperator = ", ");
 
 namespace std {
