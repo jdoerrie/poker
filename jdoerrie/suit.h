@@ -71,7 +71,7 @@ class Suit {
       case kSuit::SPADES:
         return u8"♠";
       default:
-        return "-";
+        return "?";
     }
   }
 };
