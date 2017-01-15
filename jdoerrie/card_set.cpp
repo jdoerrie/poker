@@ -5,12 +5,17 @@
 
 #include <algorithm>
 
+CardSet::CardSet(const std::bitset<N_BITS>& bits) : bits_{bits} {}
+
+CardSet::CardSet(const Card& card) {
+  bits_.set(card.id());
+}
+
 CardSet::CardSet(const std::string& str) {
   if (str.size() % 2 == 1) {
     bits_ = INVALID_ID;
   }
 
-  std::cout << str << std::endl;
   for (auto i = size_t{0}; i < str.size(); i += 2) {
     bits_.set(Card{str[i], str[i + 1]}.id());
   }
@@ -34,6 +39,75 @@ size_t CardSet::size() const {
 
 size_t CardSet::id() const {
   return bits_.to_ullong();
+}
+
+bool CardSet::IsValid(size_t num_cards) const {
+  return !bits_.test(0) && size() == num_cards;
+}
+
+bool CardSet::Add(const Card& card) {
+  if (Contains(card)) {
+    return false;
+  }
+
+  bits_.set(card.id());
+  return true;
+}
+
+CardSet& CardSet::Add(const CardSet& other) {
+  return *this |= other;
+}
+
+CardSet& CardSet::Remove(const Card& card) {
+  bits_.reset(card.id());
+  return *this;
+}
+
+CardSet& CardSet::Remove(const CardSet& other) {
+  return *this -= other;
+}
+
+bool CardSet::Contains(const Card& card) const {
+  return bits_.test(card.id());
+}
+
+bool CardSet::Contains(const CardSet& other) const {
+  for (size_t i = 0; i < N_BITS; ++i) {
+    if (other.bits_[i] && !bits_[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+CardSet& CardSet::operator&=(const CardSet& other) {
+  bits_ &= other.bits_;
+  return *this;
+}
+
+CardSet& CardSet::operator|=(const CardSet& other) {
+  bits_ |= other.bits_;
+  return *this;
+}
+
+CardSet& CardSet::operator^=(const CardSet& other) {
+  bits_ ^= other.bits_;
+  return *this;
+}
+
+CardSet& CardSet::operator-=(const CardSet& other) {
+  for (size_t i = 0; i < N_BITS; ++i) {
+    if (other.bits_[i]) {
+      bits_[i] = false;
+    }
+  }
+
+  return *this;
+}
+
+CardSet CardSet::operator~() const {
+  return CardSet(~bits_);
 }
 
 std::vector<int> CardSet::ToIds() const {
@@ -60,23 +134,6 @@ std::vector<Card> CardSet::ToCards() const {
   return cards;
 }
 
-bool CardSet::IsValid(size_t num_cards) const {
-  return !bits_.test(0) && size() == num_cards;
-}
-
-bool CardSet::Add(const Card& card) {
-  if (Contains(card)) {
-    return false;
-  }
-
-  bits_.set(card.id());
-  return true;
-}
-
-bool CardSet::Contains(const Card& card) const {
-  return bits_.test(card.id());
-}
-
 std::string CardSet::ToString(bool allRanksFirst) const {
   if (allRanksFirst) {
     std::string ranksStr, suitsStr;
@@ -96,12 +153,36 @@ std::string CardSet::ToString(bool allRanksFirst) const {
   }
 }
 
+CardSet operator&(const CardSet& lhs, const CardSet& rhs) {
+  return CardSet(lhs) &= rhs;
+}
+
+CardSet operator|(const CardSet& lhs, const CardSet& rhs) {
+  return CardSet(lhs) |= rhs;
+}
+
+CardSet operator^(const CardSet& lhs, const CardSet& rhs) {
+  return CardSet(lhs) ^= rhs;
+}
+
+CardSet operator-(const CardSet& lhs, const CardSet& rhs) {
+  return CardSet(lhs) -= rhs;
+}
+
 bool operator<(const CardSet& lhs, const CardSet& rhs) {
   return lhs.id() < rhs.id();
 }
 
 bool operator==(const CardSet& lhs, const CardSet& rhs) {
   return lhs.id() == rhs.id();
+}
+
+bool operator<=(const CardSet& lhs, const CardSet& rhs) {
+  return rhs.Contains(lhs);
+}
+
+bool operator>=(const CardSet& lhs, const CardSet& rhs) {
+  return lhs.Contains(rhs);
 }
 
 std::ostream& operator<<(std::ostream& out, const CardSet& hand) {
