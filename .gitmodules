@@ -1,0 +1,3 @@
+[submodule "jdoerrie/lib/hand-isomorphism"]
+	path = jdoerrie/lib/hand-isomorphism
+	url = git@github.com:kdub0/hand-isomorphism.git
