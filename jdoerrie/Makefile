@@ -5,13 +5,12 @@ OPTFLAGS=-O2
 DBGFLAGS=-O0 -g
 
 all:
-	$(CC) $(CXXFLAGS) $(OPTFLAGS) *.cpp -o Evaluator $(LIBS)
-
-opt:
-	$(CC) $(CXXFLAGS) $(OPTFLAGS) *.cpp -o Evaluator $(LIBS)
+	mkdir -p out/Release/
+	$(CC) $(CXXFLAGS) $(OPTFLAGS) src/*.cpp -o out/Release/Evaluator $(LIBS)
 
 dbg:
-	$(CC) $(CXXFLAGS) $(DBGFLAGS) *.cpp -o Evaluator $(LIBS)
+	mkdir -p out/Debug/
+	$(CC) $(CXXFLAGS) $(DBGFLAGS) src/*.cpp -o out/Debug/Evaluator $(LIBS)
 
 clean:
-	rm Evaluator
+	rm -rf out/
