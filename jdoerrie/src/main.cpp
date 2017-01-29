@@ -4,62 +4,36 @@
 #include "card_set.h"
 
 #include <boost/algorithm/string.hpp>
-#include <getopt.h>
+#include <gflags/gflags.h>
 #include <iostream>
 
 using namespace std;
 
+DEFINE_string(
+    mode,
+    "eval",
+    "Mode of the evaluator. Should be one of {eval, card, hand, classes}");
+DEFINE_string(
+    game,
+    "holdem",
+    "Type of the poker game. Should be one of {holdem, omaha, omaha5}");
+DEFINE_string(hands,
+              "AAsh:KKsh",
+              "Colon separated string of starting hands. Understands ranges.");
+DEFINE_string(board, "", "Community cards.");
+DEFINE_string(dead, "", "Dead cards.");
+
 int main(int argc, char* argv[]) {
   ios_base::sync_with_stdio(false);
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   string mode, game, handsStr;
-  CardSet board, dead;
-
-  static struct option long_options[] = {
-      {"mode", required_argument, nullptr, 'm'},
-      {"game", required_argument, nullptr, 'g'},
-      {"hands", required_argument, nullptr, 'h'},
-      {"board", optional_argument, nullptr, 'b'},
-      {"dead", optional_argument, nullptr, 'd'},
-      {nullptr, 0, nullptr, 0}};
-
-  int ch = 0;
-  while ((ch = getopt_long(argc, argv, "m:g:h:b:d:", long_options, nullptr)) !=
-         -1) {
-    switch (ch) {
-      case 'm':
-        mode = optarg;
-        break;
-
-      case 'g':
-        game = optarg;
-        break;
-
-      case 'h':
-        handsStr = optarg;
-        break;
-
-      case 'b':
-        board = CardSet(optarg);
-        break;
-
-      case 'd':
-        dead = CardSet(optarg);
-        break;
-    }
-  }
-
-  if (mode.empty() || game.empty() || handsStr.empty()) {
-    cout << argv[0]
-         << " --mode=[eval, card, hand, classes] "
-            "--game=[holdem, omaha, omaha5] --hands [--board, --dead]\n";
-    return 1;
-  }
+  CardSet board(FLAGS_board), dead(FLAGS_dead);
 
   vector<string> players;
-  boost::split(players, handsStr, boost::is_any_of(":"));
+  boost::split(players, FLAGS_hands, boost::is_any_of(":"));
 
-  GameType gameType = getGameType(game);
+  GameType gameType = getGameType(FLAGS_game);
   if (gameType == GameType::NONE) {
     cerr << "ERROR: " << game << " is not a valid game" << endl;
     return 1;
@@ -74,18 +48,18 @@ int main(int argc, char* argv[]) {
          << " combos)\n";
   }
 
-  cout << "Board: " << board << endl;
-  cout << "Dead: " << dead << endl;
+  cout << "Board: " << FLAGS_board << endl;
+  cout << "Dead: " << FLAGS_dead << endl;
   cout << endl;
 
   PokerGame pokerGame(gameType, ranges, board, dead);
-  if (mode == "eval") {
+  if (FLAGS_mode == "eval") {
     pokerGame.printEquities();
-  } else if (mode == "card") {
+  } else if (FLAGS_mode == "card") {
     pokerGame.printNextCards();
-  } else if (mode == "hand") {
+  } else if (FLAGS_mode == "hand") {
     pokerGame.printRangeBreakdown();
-  } else if (mode == "classes") {
+  } else if (FLAGS_mode == "classes") {
     cout << "Value Hands:\n";
     pokerGame.printCategories();
     cout << "\nDraws:\n";
