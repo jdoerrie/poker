@@ -2,7 +2,7 @@
 
 extern "C" {
 #define _Bool bool
-#include "lib/hand-isomorphism/src/hand_index.h"
+#include "../lib/hand-isomorphism/src/hand_index.h"
 }
 
 #include <vector>
