@@ -88,7 +88,7 @@ vector<Equity> Evaluator::evalRangesHelper(GameType gameType,
     currHands.pop_back();
 
     for (size_t i = 0; i < ranges.size(); ++i) {
-      equities[i].merge(result[i]);
+      equities[i] |= result[i];
     }
   }
 

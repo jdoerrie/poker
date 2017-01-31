@@ -39,7 +39,7 @@ double Equity::ToDouble() const {
   return result / numGames_;
 }
 
-void Equity::merge(const Equity& other) {
+Equity& Equity::operator|=(const Equity& other) {
   if (gameResults_.size() < other.gameResults_.size()) {
     gameResults_.resize(other.gameResults_.size());
   }
@@ -49,6 +49,7 @@ void Equity::merge(const Equity& other) {
   }
 
   numGames_ += other.numGames_;
+  return *this;
 }
 
 void Equity::addGame(size_t result) {
