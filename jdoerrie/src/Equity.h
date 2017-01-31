@@ -15,7 +15,7 @@ class Equity {
   size_t getNumGames() const;
   const std::vector<size_t>& getGameResults() const;
 
-  explicit operator double() const;
+  double ToDouble() const;
   void merge(const Equity& other);
 
  private:

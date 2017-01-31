@@ -26,7 +26,7 @@ const vector<size_t>& Equity::getGameResults() const {
   return gameResults_;
 }
 
-Equity::operator double() const {
+double Equity::ToDouble() const {
   if (numGames_ == 0) {
     return 0.0;
   }
@@ -61,11 +61,11 @@ void Equity::addGame(size_t result) {
 }
 
 bool operator<(const Equity& lhs, const Equity& rhs) {
-  return static_cast<double>(lhs) < static_cast<double>(rhs);
+  return lhs.ToDouble() < rhs.ToDouble();
 }
 
 ostream& operator<<(ostream& out, const Equity& equity) {
-  out << std::fixed << static_cast<double>(equity);
+  out << std::fixed << equity.ToDouble();
   return out;
 }
 
@@ -84,5 +84,5 @@ string colorEquity(double equity) {
 }
 
 string colorEquity(const Equity& equity) {
-  return colorEquity(static_cast<double>(equity));
+  return colorEquity(equity.ToDouble());
 }

@@ -70,8 +70,7 @@ void PokerGame::printNextCards() const {
   cout << "Best Cards for Player 1:";
   for (size_t i = 0; i < results.size(); ++i) {
     if (i > 0 &&
-        static_cast<double>(results[i - 1].first) ==
-            static_cast<double>(results[i].first)) {
+        results[i - 1].first.ToDouble() == results[i].first.ToDouble()) {
       cout << ", " << results[i].second;
     } else {
       cout << endl;
@@ -104,8 +103,7 @@ void PokerGame::printRangeBreakdown() const {
 
   map<double, vector<CardSet>, std::greater<double>> equityHandsMap;
   for (auto& result : results) {
-    equityHandsMap[static_cast<double>(result.first)].push_back(
-        std::move(result.second));
+    equityHandsMap[result.first.ToDouble()].push_back(std::move(result.second));
   }
 
   cout << "Best Hands for Player 1:\n";
