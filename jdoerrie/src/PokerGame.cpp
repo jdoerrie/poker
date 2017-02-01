@@ -33,10 +33,10 @@ void PokerGame::printEquities() const {
   cout << "Percentage Wins Losses Ties" << endl;
   for (const auto& result : results) {
     cout << fixed << colorEquity(result);
-    cout << " " << result.getGameResults()[1];
-    cout << " " << result.getGameResults()[0];
-    for (size_t i = 2; i < result.getGameResults().size(); ++i) {
-      cout << " " << result.getGameResults()[i];
+    cout << " " << result.wins();
+    cout << " " << result.losses();
+    for (size_t i = 2; i <= result.num_ties(); ++i) {
+      cout << " " << result.ties(i);
     }
 
     cout << endl;
@@ -61,7 +61,7 @@ void PokerGame::printNextCards() const {
     newBoard.Add(card);
 
     auto result = evaluator_.evalRanges(gameType_, ranges_, newBoard, dead_);
-    if (result[0].getNumGames() != 0) {
+    if (result[0].num_games() != 0) {
       results.emplace_back(result[0], card);
     }
   }
@@ -96,7 +96,7 @@ void PokerGame::printRangeBreakdown() const {
     newRanges[0] = heroRange;
 
     auto result = evaluator_.evalRanges(gameType_, newRanges, board_, dead_);
-    if (result[0].getNumGames() != 0) {
+    if (result[0].num_games() != 0) {
       results.emplace_back(result[0], hand);
     }
   }

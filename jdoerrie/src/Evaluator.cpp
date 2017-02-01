@@ -205,9 +205,9 @@ vector<Equity> Evaluator::evalHoldemHands(const vector<CardSet>& hands,
 
             for (size_t i = 0; i < numPlayers; ++i) {
               if (ranks[i] == maxRank) {
-                equities[i].addTie(numBestPlayers);
+                equities[i].AddTie(numBestPlayers);
               } else {
-                equities[i].addLose();
+                equities[i].AddLoss();
               }
             }
           }
@@ -362,9 +362,9 @@ vector<Equity> Evaluator::evalOmahaHands(const vector<CardSet>& hands,
 
             for (size_t i = 0; i < numPlayers; ++i) {
               if (ranks[i] == maxRank) {
-                equities[i].addTie(numBestPlayers);
+                equities[i].AddTie(numBestPlayers);
               } else {
-                equities[i].addLose();
+                equities[i].AddLoss();
               }
             }
           }
@@ -466,14 +466,14 @@ void Evaluator::rankHoldemRanges(vector<Equity>& equities,
         villRank = handRanks[villRank + vill.ToCards()[1].id()];
 
         if (heroRank > villRank) {
-          equities[0].addWin();
-          equities[1].addLose();
+          equities[0].AddWin();
+          equities[1].AddLoss();
         } else if (heroRank < villRank) {
-          equities[0].addLose();
-          equities[1].addWin();
+          equities[0].AddLoss();
+          equities[1].AddWin();
         } else {
-          equities[0].addTie();
-          equities[1].addTie();
+          equities[0].AddTie();
+          equities[1].AddTie();
         }
       }
     }
@@ -500,9 +500,9 @@ void Evaluator::rankHoldemRanges(vector<Equity>& equities,
 
     for (size_t i = 0; i < numPlayers; ++i) {
       if (ranks[i] == maxRank) {
-        equities[i].addTie(numBestPlayers);
+        equities[i].AddTie(numBestPlayers);
       } else {
-        equities[i].addLose();
+        equities[i].AddLoss();
       }
     }
 

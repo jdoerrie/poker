@@ -6,23 +6,29 @@
 
 class Equity {
  public:
+  using ResultsType = std::vector<size_t>;
+
   Equity();
+  explicit Equity(ResultsType results);
 
-  void addWin();
-  void addTie(size_t numPlayers = 2);
-  void addLose();
+  void AddWin();
+  void AddTie(size_t num_players = 2);
+  void AddLoss();
 
-  size_t getNumGames() const;
-  const std::vector<size_t>& getGameResults() const;
+  size_t wins() const;
+  size_t ties(size_t num_players = 2) const;
+  size_t losses() const;
+  size_t num_ties() const;
+  size_t num_games() const;
 
   double ToDouble() const;
   Equity& operator|=(const Equity& other);
 
  private:
-  void addGame(size_t result);
+  void AddResult(size_t result);
 
-  std::vector<size_t> gameResults_;
-  size_t numGames_;
+  ResultsType results_;
+  size_t num_games_;
 };
 
 std::string colorEquity(double equity);
