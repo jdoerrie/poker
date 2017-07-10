@@ -17,9 +17,9 @@ class Card {
   explicit Card(size_t id);
   explicit Card(const std::string& str);
 
-  Rank rank() const;
-  Suit suit() const;
-  size_t id() const;
+  Rank rank() const { return rank_; }
+  Suit suit() const { return suit_; }
+  size_t id() const { return (rank_.id() - 1) * Suit::MAX_ID + suit_.id(); }
   bool IsValid() const;
   std::string ToString() const;
 
