@@ -36,3 +36,9 @@
 *.app
 
 # End of https://www.gitignore.io/api/c++
+
+# Binary Files
+jdoerrie/out/
+linux/HandRanks.dat
+linux/generate_table
+linux/test
