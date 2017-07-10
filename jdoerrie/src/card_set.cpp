@@ -29,18 +29,6 @@ CardSet::CardSet(const std::vector<Card>& cards) {
 
 CardSet::CardSet(size_t id) : bits_{id} {}
 
-bool CardSet::empty() const {
-  return bits_ == 0;
-}
-
-size_t CardSet::size() const {
-  return bits_.count();
-}
-
-size_t CardSet::id() const {
-  return bits_.to_ullong();
-}
-
 bool CardSet::IsValid(size_t num_cards) const {
   return !bits_.test(0) && size() == num_cards;
 }

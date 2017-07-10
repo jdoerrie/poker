@@ -21,9 +21,9 @@ class CardSet {
   explicit CardSet(const std::vector<Card>& cards);
   explicit CardSet(size_t id);
 
-  bool empty() const;
-  size_t size() const;
-  size_t id() const;
+  bool empty() const { return bits_ == 0; }
+  size_t size() const { return bits_.count(); }
+  size_t id() const { return bits_.to_ullong(); }
 
   bool IsValid(size_t num_cards = 0) const;
   bool Add(const Card& card);
