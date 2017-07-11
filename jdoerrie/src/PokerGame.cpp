@@ -1,6 +1,6 @@
 #include "PokerGame.h"
 
-#include "Category.h"
+#include "category.h"
 #include "Equity.h"
 #include "Evaluator.h"
 #include "Range.h"
@@ -215,8 +215,8 @@ void PokerGame::printDraws(double minProb) const {
     sort(draw.second.rbegin(), draw.second.rend());
   }
 
-  vector<Category> drawCategories = {Category::Straight, Category::Flush,
-                                     Category::Straight_Flush};
+  vector<Category> drawCategories = {Category::STRAIGHT, Category::FLUSH,
+                                     Category::STRAIGHT_FLUSH};
 
   for (auto drawCategory : drawCategories) {
     if (draws[drawCategory].empty()) {
