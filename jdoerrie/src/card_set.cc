@@ -1,8 +1,5 @@
 #include "card_set.h"
 
-#include "GameType.h"
-#include "card.h"
-
 #include <algorithm>
 
 CardSet::CardSet(const std::bitset<N_BITS>& bits) : bits_{bits} {}

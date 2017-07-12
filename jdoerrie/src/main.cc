@@ -1,11 +1,12 @@
-#include "PokerGame.h"
-#include "Range.h"
-#include "card.h"
-#include "card_set.h"
+#include <iostream>
 
 #include <boost/algorithm/string.hpp>
 #include <gflags/gflags.h>
-#include <iostream>
+
+#include "card.h"
+#include "card_set.h"
+#include "poker_game.h"
+#include "range.h"
 
 using namespace std;
 

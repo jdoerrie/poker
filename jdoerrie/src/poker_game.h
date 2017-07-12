@@ -1,9 +1,9 @@
 #pragma once
 
-#include "GameType.h"
-#include "card_set.h"
-
 #include <vector>
+
+#include "card_set.h"
+#include "game_type.h"
 
 class Evaluator;
 class Range;

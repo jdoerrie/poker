@@ -1,16 +1,15 @@
-#include "Evaluator.h"
-
-#include "Equity.h"
-#include "GameType.h"
-#include "Range.h"
-#include "card.h"
-#include "card_set.h"
+#include "evaluator.h"
 
 #include <cstdio>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <vector>
+
+#include "card.h"
+#include "card_set.h"
+#include "equity.h"
+#include "game_type.h"
+#include "range.h"
 
 using namespace std;
 

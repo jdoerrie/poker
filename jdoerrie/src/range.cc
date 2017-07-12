@@ -1,12 +1,12 @@
-#include "Range.h"
-
-#include "Evaluator.h"
-#include "GameType.h"
-#include "card.h"
-#include "card_set.h"
+#include "range.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
+
+#include "card.h"
+#include "card_set.h"
+#include "evaluator.h"
+#include "game_type.h"
 
 using namespace std;
 using namespace boost;

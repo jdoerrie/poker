@@ -1,14 +1,14 @@
-#include "PokerGame.h"
-
-#include "category.h"
-#include "Equity.h"
-#include "Evaluator.h"
-#include "Range.h"
-#include "card.h"
+#include "poker_game.h"
 
 #include <algorithm>
 #include <iostream>
 #include <map>
+
+#include "card.h"
+#include "category.h"
+#include "equity.h"
+#include "evaluator.h"
+#include "range.h"
 
 using namespace std;
 

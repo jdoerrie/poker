@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "GameType.h"
+#include "game_type.h"
 #include "card.h"
 
 class CardSet {

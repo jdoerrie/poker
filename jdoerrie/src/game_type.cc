@@ -1,4 +1,4 @@
-#include "GameType.h"
+#include "game_type.h"
 
 int getNumCards(GameType gameType) {
   switch (gameType) {
