@@ -4,7 +4,7 @@ project(Evaluator)
 SET(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wextra -Werror -pedantic")
 include_directories(lib)
 
-file(GLOB_RECURSE sources src/*.cpp src/*.h)
+file(GLOB_RECURSE sources src/*.cc src/*.h)
 file(GLOB_RECURSE hand-isomorphism-sources lib/hand-isomorphism/src/*.c)
 
 add_library(hand-isomorphism SHARED ${hand-isomorphism-sources})
