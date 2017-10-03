@@ -19,7 +19,7 @@ size_t HandIndexer::IndexHands(const std::vector<CardSet>& hands) const {
   for (const auto& hand : hands) {
     for (const auto& card : hand.ToCards()) {
       auto suit = std::string(SUIT_TO_CHAR).find(card.suit().ToChar());
-      auto rank = std::string(RANK_TO_CHAR).find(card.rank().ToChar());
+      auto rank = std::string(RANK_TO_CHAR).find(to_char(card.rank()));
       cards.push_back(deck_make_card(suit, rank));
     }
   }
@@ -41,7 +41,7 @@ std::vector<CardSet> HandIndexer::UnindexHands(size_t index) const {
   for (auto card : cards) {
     char rank = RANK_TO_CHAR[deck_get_rank(card)];
     char suit = SUIT_TO_CHAR[deck_get_suit(card)];
-    hand.Add({Rank{rank}, Suit{suit}});
+    hand.Add({to_rank(rank), Suit{suit}});
 
     if (hand.size() == cards_per_round_[round]) {
       hands.push_back(std::move(hand));

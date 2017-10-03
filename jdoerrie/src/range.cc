@@ -92,8 +92,8 @@ string Range::replaceIntervals(string str) {
   vector<size_t> startIds, endIds;
   size_t maxDiff = 0;
   for (size_t i = 0; i < numCards; ++i) {
-    startIds.push_back(Rank{start[i]}.id());
-    endIds.push_back(Rank{end[i]}.id());
+    startIds.push_back(to_id(to_rank(start[i])));
+    endIds.push_back(to_id(to_rank(end[i])));
 
     if (startIds[i] < endIds[i]) {
       return str;
@@ -112,7 +112,7 @@ string Range::replaceIntervals(string str) {
   for (size_t i = 0; i <= maxDiff; ++i) {
     for (size_t j = 0; j < numCards; ++j) {
       size_t currId = startIds[j] - i * (startIds[j] - endIds[j]) / maxDiff;
-      ranks += Rank{currId}.ToChar();
+      ranks += to_char(to_rank(currId));
     }
 
     ranks += (i != maxDiff) ? '|' : ')';

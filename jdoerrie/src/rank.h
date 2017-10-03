@@ -1,127 +1,132 @@
-#pragma once
+#ifndef POKER_RANK_H_
+#define POKER_RANK_H_
 
 #include <array>
 
-class Rank {
- private:
-  enum class kRank {
-    NONE,
-    TWO,
-    THREE,
-    FOUR,
-    FIVE,
-    SIX,
-    SEVEN,
-    EIGHT,
-    NINE,
-    TEN,
-    JACK,
-    QUEEN,
-    KING,
-    ACE,
-  };
+enum class Rank {
+  NONE,
+  TWO,
+  THREE,
+  FOUR,
+  FIVE,
+  SIX,
+  SEVEN,
+  EIGHT,
+  NINE,
+  TEN,
+  JACK,
+  QUEEN,
+  KING,
+  ACE,
+};
 
-  kRank rank_ = kRank::NONE;
-
- public:
-  constexpr Rank() = default;
-  constexpr explicit Rank(size_t id) : rank_{static_cast<kRank>(id)} {}
-  constexpr explicit Rank(char c) {
-    switch (c) {
+constexpr Rank to_rank(char c) {
+  switch (c) {
       case '2':
-        rank_ = kRank::TWO;
-        return;
+        return Rank::TWO;
       case '3':
-        rank_ = kRank::THREE;
-        return;
+        return Rank::THREE;
       case '4':
-        rank_ = kRank::FOUR;
-        return;
+        return Rank::FOUR;
       case '5':
-        rank_ = kRank::FIVE;
-        return;
+        return Rank::FIVE;
       case '6':
-        rank_ = kRank::SIX;
-        return;
+        return Rank::SIX;
       case '7':
-        rank_ = kRank::SEVEN;
-        return;
+        return Rank::SEVEN;
       case '8':
-        rank_ = kRank::EIGHT;
-        return;
+        return Rank::EIGHT;
       case '9':
-        rank_ = kRank::NINE;
-        return;
+        return Rank::NINE;
       case 't':
       case 'T':
-        rank_ = kRank::TEN;
-        return;
+        return Rank::TEN;
       case 'j':
       case 'J':
-        rank_ = kRank::JACK;
-        return;
+        return Rank::JACK;
       case 'q':
       case 'Q':
-        rank_ = kRank::QUEEN;
-        return;
+        return Rank::QUEEN;
       case 'k':
       case 'K':
-        rank_ = kRank::KING;
-        return;
+        return Rank::KING;
       case 'a':
       case 'A':
-        rank_ = kRank::ACE;
-        return;
+        return Rank::ACE;
       default:
-        rank_ = kRank::NONE;
-    }
-  }
-
-  constexpr static auto MIN_ID = static_cast<size_t>(kRank::TWO);
-  constexpr static auto MAX_ID = static_cast<size_t>(kRank::ACE);
-
-  constexpr auto id() const { return static_cast<size_t>(rank_); }
-  constexpr auto IsValid() const { return rank_ != kRank::NONE; }
-  constexpr auto ToChar() const {
-    switch (rank_) {
-      case kRank::TWO:
-        return '2';
-      case kRank::THREE:
-        return '3';
-      case kRank::FOUR:
-        return '4';
-      case kRank::FIVE:
-        return '5';
-      case kRank::SIX:
-        return '6';
-      case kRank::SEVEN:
-        return '7';
-      case kRank::EIGHT:
-        return '8';
-      case kRank::NINE:
-        return '9';
-      case kRank::TEN:
-        return 'T';
-      case kRank::JACK:
-        return 'J';
-      case kRank::QUEEN:
-        return 'Q';
-      case kRank::KING:
-        return 'K';
-      case kRank::ACE:
-        return 'A';
-      default:
-        return '?';
-    }
+        return Rank::NONE;
   }
 };
 
+constexpr char to_char(Rank rank) {
+  switch (rank) {
+      case Rank::TWO:
+        return '2';
+      case Rank::THREE:
+        return '3';
+      case Rank::FOUR:
+        return '4';
+      case Rank::FIVE:
+        return '5';
+      case Rank::SIX:
+        return '6';
+      case Rank::SEVEN:
+        return '7';
+      case Rank::EIGHT:
+        return '8';
+      case Rank::NINE:
+        return '9';
+      case Rank::TEN:
+        return 'T';
+      case Rank::JACK:
+        return 'J';
+      case Rank::QUEEN:
+        return 'Q';
+      case Rank::KING:
+        return 'K';
+      case Rank::ACE:
+        return 'A';
+      default:
+        return '?';
+  }
+}
+
+constexpr size_t to_id(Rank rank) {
+  return static_cast<size_t>(rank);
+}
+
+constexpr Rank to_rank(size_t id) {
+  return static_cast<Rank>(id);
+}
+
+constexpr bool is_valid(Rank rank) {
+  return rank != Rank::NONE;
+}
+
+constexpr size_t MIN_RANK_ID = static_cast<size_t>(Rank::TWO);
+constexpr size_t MAX_RANK_ID = static_cast<size_t>(Rank::ACE);
+
+
 namespace rank {
 
-constexpr std::array<Rank, Rank::MAX_ID> GetAllValidRanks() {
-  return {{Rank{'2'}, Rank{'3'}, Rank{'4'}, Rank{'5'}, Rank{'6'}, Rank{'7'},
-           Rank{'8'}, Rank{'9'}, Rank{'T'}, Rank{'J'}, Rank{'Q'}, Rank{'K'},
-           Rank{'A'}}};
+constexpr std::array<Rank, MAX_RANK_ID> all_ranks() {
+  return {{
+    to_rank('2'),
+    to_rank('3'),
+    to_rank('4'),
+    to_rank('5'),
+    to_rank('6'),
+    to_rank('7'),
+    to_rank('8'),
+    to_rank('9'),
+    to_rank('T'),
+    to_rank('J'),
+    to_rank('Q'),
+    to_rank('K'),
+    to_rank('A'),
+  }};
 }
 
 }  // namespace rank
+
+#endif // ifndef POKER_RANK_H_
